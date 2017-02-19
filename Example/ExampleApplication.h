@@ -8,6 +8,7 @@ public:
 	explicit ExampleApplication();
 	virtual ~ExampleApplication();
 
+	virtual bool initialize();
 	virtual void render();
 
 private:

@@ -6,11 +6,13 @@
 #undef main
 #endif
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
 	ExampleApplication app;
 	fw::Framework framework(&app);
-	framework.initialize();
+	if (!framework.initialize()) {
+		return 1;
+	}
 	framework.execute();
 	framework.uninitialize();
 	return 0;

@@ -13,6 +13,7 @@ public:
 	Application& operator=(const Application&) = delete;
 	Application& operator=(Application&&) = delete;
 
+	virtual bool initialize() = 0;
 	virtual void render() = 0;
 };
 
