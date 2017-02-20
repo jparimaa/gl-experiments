@@ -7,10 +7,6 @@ namespace
 void GLAPIENTRY glDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei /*length*/,
 								const GLchar* message, const void* /*userParam*/)
 {
-	if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) {
-		return;
-	}
-
 	std::cerr << "OpenGL debug callback function\n";
 	std::cerr << "    Message: " << message << "\n";
 
@@ -99,8 +95,14 @@ void GLAPIENTRY glDebugCallback(GLenum source, GLenum type, GLuint id, GLenum se
 namespace fw
 {
 
-Framework::Framework(Application* application) :
-	app(application)
+unsigned int Framework::timeSinceStart = 0;
+
+unsigned int Framework::getTimeSinceStart()
+{
+	return timeSinceStart;
+}
+
+Framework::Framework()
 {
 }
 
@@ -122,7 +124,7 @@ bool Framework::initialize()
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 
-	window = SDL_CreateWindow("OpenGL", 100, 100, 800, 600, SDL_WINDOW_OPENGL);
+	window = SDL_CreateWindow("OpenGL", 100, 400, 800, 600, SDL_WINDOW_OPENGL);
 	if (!window) {
 		std::cerr << "ERROR: Failed to create SDL2 window\n";
 		return false;
@@ -130,11 +132,11 @@ bool Framework::initialize()
 
 	context = SDL_GL_CreateContext(window);
 
-	int value = 0;
-	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &value);
-	std::cout << "SDL_GL_CONTEXT_MAJOR_VERSION: " << value << "\n";
-	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &value);
-	std::cout << "SDL_GL_CONTEXT_MINOR_VERSION: " << value << "\n";
+	int major = 0;
+	int minor = 0;
+	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &major);
+	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minor);
+	std::cout << "OpenGL version: " << major << "." << minor << "\n";
 
 	if (glDebugMessageCallback) {
 		glEnable(GL_DEBUG_OUTPUT);
@@ -150,24 +152,26 @@ bool Framework::initialize()
 		return false;
 	}
 
-	if (!app) {
+	return true;
+}
+
+bool Framework::setApplication(Application* application)
+{
+	if (!application) {
 		std::cerr << "ERROR: Invalid application pointer\n";
 		return false;
 	}
 
+	app = application;
 	if (!app->initialize()) {
 		return false;
 	}
-
 	return true;
 }
 
 void Framework::execute()
 {
 	bool loop = true;
-
-	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-
 	while (loop) {
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
@@ -182,7 +186,8 @@ void Framework::execute()
 				}
 			}
 		}
-
+		timeSinceStart = SDL_GetTicks();
+		app->update();
 		app->render();
 		SDL_GL_SwapWindow(window);
 	}

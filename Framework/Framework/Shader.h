@@ -19,10 +19,10 @@ public:
 
 	bool attachShader(GLenum shaderType, const std::string& filename);
 	bool linkProgram();
-	
+	GLuint getProgram() const;
 
 private:
-	GLuint program;
+	GLuint program = 0;
 	std::vector<GLuint> shaders;
 
 	bool compileShader(GLuint shader, const std::string& filename);

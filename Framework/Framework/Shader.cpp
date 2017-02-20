@@ -1,5 +1,4 @@
 #include "Shader.h"
-#include "Helpers.h"
 #include <iostream>
 #include <iterator>
 #include <fstream>
@@ -9,11 +8,7 @@ namespace fw
 
 fw::Shader::Shader()
 {
-	try {
-		program = glCreateProgram();
-	} catch (std::exception& e) {
-		std::cerr << e.what() << "\n";
-	}
+	program = glCreateProgram();
 }
 
 fw::Shader::~Shader()
@@ -51,17 +46,23 @@ bool Shader::linkProgram()
 	}
 
 	deleteShaders();
-
 	return isLinked == GL_TRUE;
+}
+
+GLuint Shader::getProgram() const
+{
+	return program;
 }
 
 bool Shader::compileShader(GLuint shader, const std::string& filename)
 {
 	std::string shaderCode;
-	try {
-		shaderCode = loadFile(filename);
-	} catch (std::exception& e) {
-		std::cerr << "ERROR: " << e.what() << "\n";
+	std::ifstream file(filename.c_str());
+	if (file) {
+		shaderCode.append((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+		file.close();
+	} else {
+		std::cerr << "ERROR: Could not open file: " << filename << "\n";
 		return false;
 	}
 

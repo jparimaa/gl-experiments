@@ -10,7 +10,9 @@ namespace fw
 class Framework
 {
 public:
-	explicit Framework(Application* application);
+	static unsigned int getTimeSinceStart();
+
+	explicit Framework();
 	~Framework();
 	Framework(const Framework&) = delete;
 	Framework(Framework&&) = delete;
@@ -18,10 +20,13 @@ public:
 	Framework& operator=(Framework&&) = delete;
 
 	bool initialize();
+	bool setApplication(Application* application);
 	void execute();
 	void uninitialize();
 	
 private:
+	static unsigned int timeSinceStart;
+
 	Application* app = nullptr;
 	SDL_Window* window = nullptr;
 	SDL_GLContext context = nullptr;
