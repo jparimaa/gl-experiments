@@ -16,14 +16,13 @@ ExampleApplication::~ExampleApplication()
 
 bool ExampleApplication::initialize()
 {
-	bool attached = true;
-	std::string shaderFile = "Shaders/simple";
-	std::string vertexShaderFile = shaderFile + ".vert";
-	std::string fragmentShaderFile = shaderFile + ".frag";
-	attached = attached && shader.attachShader(GL_VERTEX_SHADER, vertexShaderFile);
-	attached = attached && shader.attachShader(GL_FRAGMENT_SHADER, fragmentShaderFile);
-	if (attached && shader.linkProgram()) {
-		std::cout << "Created shader program " << shaderFile << ", ID: " << shader.getProgram() << "\n";
+	std::string shaderPath = "Shaders/simple";
+	std::vector<std::string> shaderFiles = {
+		shaderPath + ".vert",
+		shaderPath + ".frag"
+	};
+	if (shader.createProgram(shaderFiles)) {
+		std::cout << "Created shader program " << shaderPath << ", ID: " << shader.getProgram() << "\n";
 	} else {
 		std::cerr << "ERROR: Shader creation failed\n";
 		return false;

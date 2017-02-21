@@ -6,21 +6,54 @@
 namespace fw
 {
 
-fw::Shader::Shader()
-{
-	program = glCreateProgram();
+Shader::Shader()
+{	
 }
 
-fw::Shader::~Shader()
+Shader::~Shader()
 {
 	glDeleteProgram(program);
 	deleteShaders();
 }
 
-bool Shader::attachShader(GLenum shaderType, const std::string& filename)
+bool Shader::createProgram(const std::vector<std::string>& files)
 {
-	GLuint shader = glCreateShader(shaderType);
-	if (!shader || !compileShader(shader, filename)) {
+	program = glCreateProgram();
+	for (const auto file : files) {
+		if (!attachShader(file)) {
+			return false;
+		}
+	}
+	
+	return linkProgram();
+}
+
+GLuint Shader::getProgram() const
+{
+	return program;
+}
+
+bool Shader::attachShader(const std::string& filename)
+{
+	auto getShaderType = [] (const std::string& s) {
+		if (s.find(".vert") != std::string::npos) {
+			return GL_VERTEX_SHADER;
+		}
+		if (s.find(".geom") != std::string::npos) {
+			return GL_GEOMETRY_SHADER;
+		}
+		if (s.find(".frag") != std::string::npos) {
+			return GL_FRAGMENT_SHADER;
+		}
+		return 0;
+	};
+
+	GLuint shader = glCreateShader(getShaderType(filename));
+	if (shader == 0) {
+		std::cerr << "ERROR: Could not create shader from file " << filename << "\n";
+		return false;
+	}
+	if (!compileShader(shader, filename)) {
 		glDeleteShader(shader);
 		return false;
 	}
@@ -28,30 +61,6 @@ bool Shader::attachShader(GLenum shaderType, const std::string& filename)
 	shaders.push_back(shader);
 	glAttachShader(program, shader);
 	return true;
-}
-
-bool Shader::linkProgram()
-{
-	glLinkProgram(program);
-
-	GLint isLinked = 0;
-	glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
-	if (isLinked == GL_FALSE) {
-		GLint maxLength = 0;
-		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
-		std::vector<GLchar> infoLog(maxLength);
-		glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
-		std::copy(infoLog.begin(), infoLog.end(), std::ostream_iterator<GLchar>(std::cerr, ""));
-		glDeleteProgram(program);
-	}
-
-	deleteShaders();
-	return isLinked == GL_TRUE;
-}
-
-GLuint Shader::getProgram() const
-{
-	return program;
 }
 
 bool Shader::compileShader(GLuint shader, const std::string& filename)
@@ -73,7 +82,7 @@ bool Shader::compileShader(GLuint shader, const std::string& filename)
 	GLint isCompiled = 0;
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
 	if (isCompiled == GL_FALSE) {
-		std::cerr << "WARNING: Shader compilation failed: " << filename << "\n";
+		std::cerr << "ERROR: Shader compilation failed: " << filename << "\n";
 		GLint maxLength = 0;
 		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
 		std::vector<GLchar> infoLog(maxLength);
@@ -89,6 +98,25 @@ bool Shader::compileShader(GLuint shader, const std::string& filename)
 		return false;
 	}
 	return true;
+}
+
+bool Shader::linkProgram()
+{
+	glLinkProgram(program);
+
+	GLint isLinked = 0;
+	glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+	if (isLinked == GL_FALSE) {
+		GLint maxLength = 0;
+		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
+		std::vector<GLchar> infoLog(maxLength);
+		glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
+		std::copy(infoLog.begin(), infoLog.end(), std::ostream_iterator<GLchar>(std::cerr, ""));
+		glDeleteProgram(program);
+	}
+
+	deleteShaders();
+	return isLinked == GL_TRUE;
 }
 
 void Shader::deleteShaders()
