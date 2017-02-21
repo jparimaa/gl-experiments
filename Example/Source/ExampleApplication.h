@@ -2,6 +2,7 @@
 
 #include <Framework/Application.h>
 #include <Framework/Shader.h>
+#include <Framework/Texture.h>
 #include <GL/glew.h>
 
 class ExampleApplication : public fw::Application
@@ -20,7 +21,9 @@ public:
 
 private:
 	fw::Shader shader;
+	fw::Texture texture;
 	GLint timeLocation = 0;
+	GLint textureLocation = 0;
 	GLuint VAO = 0;
 	GLuint VBO = 0;	
 	GLuint EBO = 0;

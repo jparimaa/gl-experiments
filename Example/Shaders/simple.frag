@@ -1,10 +1,14 @@
 #version 440 core
 
 uniform float time;
+uniform sampler2D tex0;
+
+in vec2 texCoord;
 
 out vec4 color;
 
 void main()
 {
-    color = vec4(sin(time), cos(time), 0.2f, 1.0f);
+	float f = sin(time);
+	color = vec4(texture(tex0, texCoord).gb, f, 1.0f);
 } 

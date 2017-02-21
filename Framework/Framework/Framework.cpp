@@ -7,6 +7,10 @@ namespace
 void GLAPIENTRY glDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei /*length*/,
 								const GLchar* message, const void* /*userParam*/)
 {
+	if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) {
+		return;
+	}
+
 	std::cerr << "OpenGL debug callback function\n";
 	std::cerr << "    Message: " << message << "\n";
 
@@ -119,18 +123,24 @@ bool Framework::initialize()
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 
-	window = SDL_CreateWindow("OpenGL", 100, 400, 800, 600, SDL_WINDOW_OPENGL);
+	window = SDL_CreateWindow("OpenGL", 400, 100, 1024, 768, SDL_WINDOW_OPENGL);
 	if (!window) {
 		std::cerr << "ERROR: Failed to create SDL2 window\n";
 		return false;
 	}
 
 	context = SDL_GL_CreateContext(window);
+
+	GLenum err = glewInit();
+	if (err != GLEW_OK) {
+		std::cerr << "ERROR: " << glewGetErrorString(err) << "\n";
+		return false;
+	}
 
 	int major = 0;
 	int minor = 0;
@@ -144,14 +154,11 @@ bool Framework::initialize()
 		GLuint unusedIds = 0;
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, &unusedIds, GL_TRUE);
 		glDebugMessageCallback(glDebugCallback, nullptr);
+		std::cout << "Debug context enabled\n";
+	} else {
+		std::cout << "Debug context NOT enabled\n";
 	}
-
-	GLenum err = glewInit();
-	if (err != GLEW_OK) {
-		std::cerr << "ERROR: " << glewGetErrorString(err) << "\n";
-		return false;
-	}
-
+	
 	return true;
 }
 

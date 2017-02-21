@@ -9,16 +9,20 @@
 int main(int /*argc*/, char* /*argv[]*/)
 {	
 	fw::Framework framework;
-	if (!framework.initialize()) {
-		return 1;
+	bool success = framework.initialize();
+	if (success) {
+		ExampleApplication app;
+		success = framework.setApplication(&app);
+		if (success) {
+			framework.execute();
+			framework.uninitialize();
+		}
 	}
 
-	ExampleApplication app;
-	if (!framework.setApplication(&app)) {
+	if (!success) {
+		std::cout << "Press any key to exit\n";
+		std::cin.get();
 		return 1;
 	}
-
-	framework.execute();
-	framework.uninitialize();
 	return 0;
 }

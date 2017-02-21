@@ -22,11 +22,13 @@
     <ClCompile Include="Framework\Application.cpp" />
     <ClCompile Include="Framework\Framework.cpp" />
     <ClCompile Include="Framework\Shader.cpp" />
+    <ClCompile Include="Framework\Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Framework\Application.h" />
     <ClInclude Include="Framework\Framework.h" />
     <ClInclude Include="Framework\Shader.h" />
+    <ClInclude Include="Framework\Texture.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{19CDC3BF-8272-498C-AC7F-59A78921DC2F}</ProjectGuid>
