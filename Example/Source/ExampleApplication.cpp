@@ -1,5 +1,6 @@
 #include "ExampleApplication.h"
 #include <Framework\Framework.h>
+#include <Framework/ImageLoader.h>
 #include <iostream>
 #include <fstream>
 
@@ -12,6 +13,7 @@ ExampleApplication::~ExampleApplication()
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
 	glDeleteBuffers(1, &EBO);
+	glDeleteTextures(1, &texture);
 }
 
 bool ExampleApplication::initialize()
@@ -30,20 +32,26 @@ bool ExampleApplication::initialize()
 	}
 	
 	// Texture
+	fw::ImageLoader imageLoader;
 	std::string textureFile = "../Assets/Textures/checker.png";
-	if (texture.setTexImage2D(textureFile)) {
-		std::cout << "Loaded texture " << textureFile << " (" << texture.getId() << ")\n";
+	int width = 0;
+	int height = 0;
+	int channels = 0;
+	unsigned char* data = imageLoader.loadImage(textureFile, width, height, channels);
+	if (data) {
+		glGenTextures(1, &texture);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		std::cout << "Loaded texture " << textureFile << " (" << texture << ")\n";
 	} else {
 		return false;
 	}
-
-	glBindTexture(GL_TEXTURE_2D, texture.getId());
-	glGenerateMipmap(GL_TEXTURE_2D);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	
+		
 	// Uniforms	
 	glUseProgram(shader.getProgram());
 	timeLocation = glGetUniformLocation(shader.getProgram(), "time");
@@ -102,7 +110,7 @@ void ExampleApplication::render()
 	glUseProgram(shader.getProgram());
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture.getId());
+	glBindTexture(GL_TEXTURE_2D, texture);
 	glUniform1i(textureLocation, 0);
 
 	GLfloat time = static_cast<GLfloat>(fw::Framework::getTimeSinceStart()) / 1000.0f;
