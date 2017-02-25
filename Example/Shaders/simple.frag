@@ -1,7 +1,7 @@
 #version 440 core
 
-uniform float time;
-uniform sampler2D tex0;
+layout (location = 1) uniform float time;
+layout (location = 2) uniform sampler2D tex0;
 
 in vec2 texCoord;
 

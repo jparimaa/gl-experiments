@@ -1,8 +1,19 @@
 #include "ExampleApplication.h"
-#include <Framework\Framework.h>
+#include <Framework/Framework.h>
 #include <Framework/ImageLoader.h>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <fstream>
+#include <cmath>
+
+namespace
+{
+
+GLint mvpMatrixLocation = 0;
+GLint timeLocation = 1;
+GLint textureLocation = 2;
+
+} // anonymous
 
 ExampleApplication::ExampleApplication()
 {
@@ -52,23 +63,12 @@ bool ExampleApplication::initialize()
 		return false;
 	}
 		
-	// Uniforms	
-	glUseProgram(shader.getProgram());
-	timeLocation = glGetUniformLocation(shader.getProgram(), "time");
-	if (timeLocation == -1) {
-		std::cerr << "ERROR: Invalid uniform location: time\n";
-	}
-	textureLocation = glGetUniformLocation(shader.getProgram(), "tex0");
-	if (timeLocation == -1) {
-		std::cerr << "ERROR: Invalid uniform location: tex0\n";
-	}
-
 	// Buffers
 	GLfloat vertices[] = {
-		 0.5f,  0.5f, 0.0f,   1.0f, 1.0f,
-		 0.5f, -0.5f, 0.0f,   1.0f, 0.0f,
-		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f,
-		-0.5f,  0.5f, 0.0f,   0.0f, 1.0f
+		 0.5f,  0.5f, -1.0f,   1.0f, 1.0f,
+		 0.5f, -0.5f, -1.0f,   1.0f, 0.0f,
+		-0.5f, -0.5f, -1.0f,   0.0f, 0.0f,
+		-0.5f,  0.5f, -1.0f,   0.0f, 1.0f
 	};
 	
 	GLuint indices[] = {
@@ -102,12 +102,24 @@ bool ExampleApplication::initialize()
 
 void ExampleApplication::update()
 {
+	fw::Transformation& t = camera.getTransformation();
+	glm::vec3& p = t.position;
+	float timeSinceStart = static_cast<float>(fw::Framework::getTimeSinceStart()) / 1000.0f;
+	p.z = 1.0f + std::sin(timeSinceStart);
+
+	glm::vec3& r = t.rotation;
+	r.y = 1.0f * std::sin(0.5f + 1.2f * timeSinceStart);
+
+	glm::mat4 viewMatrix = camera.updateViewMatrix();
+	mvpMatrix = camera.getProjectionMatrix() * viewMatrix /* * modelMatrix */;
 }
 
 void ExampleApplication::render()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glUseProgram(shader.getProgram());
+
+	glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(mvpMatrix));
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture);

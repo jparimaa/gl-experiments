@@ -20,15 +20,19 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Framework\Application.cpp" />
+    <ClCompile Include="Framework\Camera.cpp" />
     <ClCompile Include="Framework\Framework.cpp" />
     <ClCompile Include="Framework\Shader.cpp" />
     <ClCompile Include="Framework\ImageLoader.cpp" />
+    <ClCompile Include="Framework\Transformation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Framework\Application.h" />
+    <ClInclude Include="Framework\Camera.h" />
     <ClInclude Include="Framework\Framework.h" />
     <ClInclude Include="Framework\Shader.h" />
     <ClInclude Include="Framework\ImageLoader.h" />
+    <ClInclude Include="Framework\Transformation.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{19CDC3BF-8272-498C-AC7F-59A78921DC2F}</ProjectGuid>
@@ -94,6 +98,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <DisableLanguageExtensions>true</DisableLanguageExtensions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -121,6 +126,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <DisableLanguageExtensions>true</DisableLanguageExtensions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
