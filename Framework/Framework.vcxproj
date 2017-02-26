@@ -21,7 +21,9 @@
   <ItemGroup>
     <ClCompile Include="Framework\Application.cpp" />
     <ClCompile Include="Framework\Camera.cpp" />
+    <ClCompile Include="Framework\CameraController.cpp" />
     <ClCompile Include="Framework\Framework.cpp" />
+    <ClCompile Include="Framework\Input.cpp" />
     <ClCompile Include="Framework\Shader.cpp" />
     <ClCompile Include="Framework\ImageLoader.cpp" />
     <ClCompile Include="Framework\Transformation.cpp" />
@@ -29,7 +31,9 @@
   <ItemGroup>
     <ClInclude Include="Framework\Application.h" />
     <ClInclude Include="Framework\Camera.h" />
+    <ClInclude Include="Framework\CameraController.h" />
     <ClInclude Include="Framework\Framework.h" />
+    <ClInclude Include="Framework\Input.h" />
     <ClInclude Include="Framework\Shader.h" />
     <ClInclude Include="Framework\ImageLoader.h" />
     <ClInclude Include="Framework\Transformation.h" />

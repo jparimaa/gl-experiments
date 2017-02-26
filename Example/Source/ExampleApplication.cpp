@@ -9,9 +9,9 @@
 namespace
 {
 
-GLint mvpMatrixLocation = 0;
-GLint timeLocation = 1;
-GLint textureLocation = 2;
+const GLint mvpMatrixLocation = 0;
+const GLint timeLocation = 1;
+const GLint textureLocation = 2;
 
 } // anonymous
 
@@ -29,6 +29,8 @@ ExampleApplication::~ExampleApplication()
 
 bool ExampleApplication::initialize()
 {
+	cameraController.setCamera(&camera);
+
 	// Shader
 	std::string shaderPath = "Shaders/simple";
 	std::vector<std::string> shaderFiles = {
@@ -102,13 +104,7 @@ bool ExampleApplication::initialize()
 
 void ExampleApplication::update()
 {
-	fw::Transformation& t = camera.getTransformation();
-	glm::vec3& p = t.position;
-	float timeSinceStart = static_cast<float>(fw::Framework::getTimeSinceStart()) / 1000.0f;
-	p.z = 1.0f + std::sin(timeSinceStart);
-
-	glm::vec3& r = t.rotation;
-	r.y = 1.0f * std::sin(0.5f + 1.2f * timeSinceStart);
+	cameraController.update();
 
 	glm::mat4 viewMatrix = camera.updateViewMatrix();
 	mvpMatrix = camera.getProjectionMatrix() * viewMatrix /* * modelMatrix */;
@@ -125,8 +121,7 @@ void ExampleApplication::render()
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glUniform1i(textureLocation, 0);
 
-	GLfloat time = static_cast<GLfloat>(fw::Framework::getTimeSinceStart()) / 1000.0f;
-	glUniform1f(timeLocation, time);
+	glUniform1f(timeLocation, fw::Framework::getTimeSinceStart());
 
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

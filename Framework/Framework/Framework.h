@@ -10,7 +10,8 @@ namespace fw
 class Framework
 {
 public:
-	static unsigned int getTimeSinceStart();
+	static float getTimeSinceStart();
+	static float getFrameTime();
 
 	explicit Framework();
 	~Framework();
@@ -25,11 +26,18 @@ public:
 	void uninitialize();
 	
 private:
-	static unsigned int timeSinceStart;
+	static float timeSinceStart;
+	static float frameTime;
 
+	bool running = true;
 	Application* app = nullptr;
 	SDL_Window* window = nullptr;
 	SDL_GLContext context = nullptr;
+
+	int mousePosX = 0;
+	int mousePosY = 0;
+
+	void handleEvents();
 };
 
 } // fw

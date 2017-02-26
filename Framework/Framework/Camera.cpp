@@ -18,7 +18,7 @@ Camera::~Camera()
 const glm::mat4x4& Camera::updateViewMatrix()
 {
 	viewMatrix = glm::lookAt(transformation.position,
-							 transformation.getForward(),
+							 transformation.position + transformation.getForward(),
 							 transformation.getUp());
 	return viewMatrix;
 }

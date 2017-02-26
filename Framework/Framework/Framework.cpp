@@ -1,4 +1,5 @@
 #include "Framework.h"
+#include "Input.h"
 #include <iostream>
 
 namespace
@@ -99,11 +100,17 @@ void GLAPIENTRY glDebugCallback(GLenum source, GLenum type, GLuint id, GLenum se
 namespace fw
 {
 
-unsigned int Framework::timeSinceStart = 0;
+float Framework::timeSinceStart = 0.0f;
+float Framework::frameTime = 0.0f;
 
-unsigned int Framework::getTimeSinceStart()
+float Framework::getTimeSinceStart()
 {
 	return timeSinceStart;
+}
+
+float Framework::getFrameTime()
+{
+	return frameTime;
 }
 
 Framework::Framework()
@@ -178,22 +185,13 @@ bool Framework::setApplication(Application* application)
 
 void Framework::execute()
 {
-	bool loop = true;
-	while (loop) {
-		SDL_Event event;
-		while (SDL_PollEvent(&event)) {
-			if (event.type == SDL_QUIT) {
-				loop = false;
-			}
-			if (event.type == SDL_KEYDOWN) {
-				switch (event.key.keysym.sym) {
-				case SDLK_ESCAPE:
-					loop = false;
-					break;
-				}
-			}
-		}
-		timeSinceStart = SDL_GetTicks();
+	while (running) {
+		handleEvents();
+
+		float currentTime = static_cast<float>(SDL_GetTicks()) / 1000.0f;
+		frameTime = currentTime - timeSinceStart;
+		timeSinceStart = currentTime;
+
 		app->update();
 		app->render();
 		SDL_GL_SwapWindow(window);
@@ -205,6 +203,38 @@ void Framework::uninitialize()
 	SDL_GL_DeleteContext(context);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
+}
+
+void Framework::handleEvents()
+{
+	Input::setMouseDeltaX(0);
+	Input::setMouseDeltaY(0);
+
+	SDL_Event event;
+	while (SDL_PollEvent(&event)) {
+		if (event.type == SDL_QUIT) {
+			running = false;
+		}
+		if (event.type == SDL_KEYDOWN) {
+			switch (event.key.keysym.sym) {
+			case SDLK_ESCAPE:
+				running = false;
+				break;
+			}
+			Input::setKeyDown(event.key.keysym.sym);
+		}
+		if (event.type == SDL_KEYUP) {
+			Input::setKeyUp(event.key.keysym.sym);
+		}
+		if (event.type == SDL_MOUSEMOTION) {
+			int deltaX = event.motion.x - mousePosX;
+			int deltaY = event.motion.y - mousePosY;
+			Input::setMouseDeltaX(deltaX);
+			Input::setMouseDeltaY(deltaY);
+			mousePosX = event.motion.x;
+			mousePosY = event.motion.y;
+		}
+	}
 }
 
 } // fw

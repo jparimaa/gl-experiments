@@ -2,6 +2,7 @@
 
 #include <Framework/Application.h>
 #include <Framework/Camera.h>
+#include <Framework/CameraController.h>
 #include <Framework/Shader.h>
 #include <glm/glm.hpp>
 #include <GL/glew.h>
@@ -22,6 +23,7 @@ public:
 
 private:
 	fw::Camera camera;
+	fw::CameraController cameraController;
 	fw::Shader shader;
 	glm::mat4 mvpMatrix;
 	GLuint texture = 0;
