@@ -1,6 +1,7 @@
 #include "ExampleApplication.h"
 #include <Framework/Framework.h>
 #include <Framework/ImageLoader.h>
+#include <Framework/Model.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <fstream>
@@ -31,6 +32,12 @@ bool ExampleApplication::initialize()
 {
 	cameraController.setCamera(&camera);
 
+	fw::Model model;
+	std::string modelFile = "../Assets/Models/attack_droid.obj";
+	if (model.loadModel(modelFile)) {
+		std::cout << "Loaded model " << modelFile << "\n";
+	}
+
 	// Shader
 	std::string shaderPath = "Shaders/simple";
 	std::vector<std::string> shaderFiles = {
@@ -38,7 +45,7 @@ bool ExampleApplication::initialize()
 		shaderPath + ".frag"
 	};
 	if (shader.createProgram(shaderFiles)) {
-		std::cout << "Created shader program " << shaderPath << " (" << shader.getProgram() << ")\n";
+		std::cout << "Loaded shader " << shaderPath << " (" << shader.getProgram() << ")\n";
 	} else {
 		std::cerr << "ERROR: Shader creation failed\n";
 		return false;

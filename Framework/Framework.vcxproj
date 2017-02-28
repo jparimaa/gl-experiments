@@ -24,6 +24,7 @@
     <ClCompile Include="Framework\CameraController.cpp" />
     <ClCompile Include="Framework\Framework.cpp" />
     <ClCompile Include="Framework\Input.cpp" />
+    <ClCompile Include="Framework\Model.cpp" />
     <ClCompile Include="Framework\Shader.cpp" />
     <ClCompile Include="Framework\ImageLoader.cpp" />
     <ClCompile Include="Framework\Transformation.cpp" />
@@ -34,6 +35,7 @@
     <ClInclude Include="Framework\CameraController.h" />
     <ClInclude Include="Framework\Framework.h" />
     <ClInclude Include="Framework\Input.h" />
+    <ClInclude Include="Framework\Model.h" />
     <ClInclude Include="Framework\Shader.h" />
     <ClInclude Include="Framework\ImageLoader.h" />
     <ClInclude Include="Framework\Transformation.h" />
