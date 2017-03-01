@@ -26,7 +26,7 @@
     <ClCompile Include="Framework\Input.cpp" />
     <ClCompile Include="Framework\Model.cpp" />
     <ClCompile Include="Framework\Shader.cpp" />
-    <ClCompile Include="Framework\ImageLoader.cpp" />
+    <ClCompile Include="Framework\Image.cpp" />
     <ClCompile Include="Framework\Transformation.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -37,7 +37,7 @@
     <ClInclude Include="Framework\Input.h" />
     <ClInclude Include="Framework\Model.h" />
     <ClInclude Include="Framework\Shader.h" />
-    <ClInclude Include="Framework\ImageLoader.h" />
+    <ClInclude Include="Framework\Image.h" />
     <ClInclude Include="Framework\Transformation.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

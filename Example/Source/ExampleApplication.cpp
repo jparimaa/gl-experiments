@@ -1,6 +1,6 @@
 #include "ExampleApplication.h"
 #include <Framework/Framework.h>
-#include <Framework/ImageLoader.h>
+#include <Framework/Image.h>
 #include <Framework/Model.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
@@ -52,13 +52,13 @@ bool ExampleApplication::initialize()
 	}
 	
 	// Texture
-	fw::ImageLoader imageLoader;
+	fw::Image image;
 	std::string textureFile = "../Assets/Textures/checker.png";
 	int width = 0;
 	int height = 0;
 	int channels = 0;
-	unsigned char* data = imageLoader.loadImage(textureFile, width, height, channels);
-	if (data) {
+	if (image.load(textureFile, width, height, channels)) {
+		unsigned char* data = image.getData();
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);

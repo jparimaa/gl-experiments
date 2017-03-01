@@ -1,30 +1,35 @@
-#include "ImageLoader.h"
+#include "Image.h"
 #include <iostream>
 
 namespace fw
 {
 
-ImageLoader::ImageLoader()
+Image::Image()
 {
 }
 
-ImageLoader::~ImageLoader()
+Image::~Image()
 {
 	clearData();
 }
 
-unsigned char* ImageLoader::loadImage(const std::string& file, int& width, int& height, int& channels)
+bool Image::load(const std::string& file, int& width, int& height, int& channels)
 {
 	clearData();
 	data = SOIL_load_image(file.c_str(), &width, &height, &channels, format);
 	if (!data) {
 		std::cerr << "ERROR: Could not load texture file " << file << "\n";
-		return nullptr;
+		return false;
 	}
+	return true;
+}
+
+unsigned char* Image::getData() const
+{
 	return data;
 }
 
-void ImageLoader::clearData()
+void Image::clearData()
 {
 	if (data) {
 		SOIL_free_image_data(data);
