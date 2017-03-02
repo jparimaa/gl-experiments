@@ -2,6 +2,7 @@
 #include "Transformation.h"
 #include "Framework.h"
 #include "Input.h"
+#include "Common.h"
 #include <glm/glm.hpp>
 #include <SDL.h>
 #include <iostream>
@@ -9,8 +10,7 @@
 namespace
 {
 
-const float TO_RADIANS = 0.0174532925f;
-const float ROTATION_LIMIT = 87.0f * TO_RADIANS;
+const float ROTATION_LIMIT = 87.0f * fw::TO_RADIANS;
 
 } // anonymous
 
@@ -63,10 +63,6 @@ void CameraController::update()
 	}
 	if (Input::isKeyDown(SDLK_d)) {
 		t.move(-t.getLeft() * speed);
-	}
-	if (Input::isKeyDown(SDLK_r)) {
-		t.position = glm::vec3(0.0f, 0.0f, 0.0f);
-		t.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
 	}
 
 	t.rotate(Transformation::UP, -static_cast<float>(Input::getMouseDeltaX()) * sensitivity);

@@ -16,7 +16,7 @@ public:
 		std::vector<glm::vec3> vertices;
 		std::vector<glm::vec3> normals;
 		std::vector<glm::vec3> tangents;
-		std::vector<glm::vec2> UVs;
+		std::vector<glm::vec2> uvs;
 		std::vector<unsigned int> indices;
 
 		using Materials = std::unordered_map<aiTextureType, std::vector<std::string>>;

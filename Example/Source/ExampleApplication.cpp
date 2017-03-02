@@ -2,6 +2,7 @@
 #include <Framework/Framework.h>
 #include <Framework/Image.h>
 #include <Framework/Model.h>
+#include <Framework/Input.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <fstream>
@@ -23,20 +24,17 @@ ExampleApplication::ExampleApplication()
 ExampleApplication::~ExampleApplication()
 {
 	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
-	glDeleteBuffers(1, &EBO);
+	glDeleteBuffers(1, &vertexBuffer);
+	glDeleteBuffers(1, &uvBuffer);
+	glDeleteBuffers(1, &indexBuffer);
 	glDeleteTextures(1, &texture);
 }
 
 bool ExampleApplication::initialize()
 {
 	cameraController.setCamera(&camera);
-
-	fw::Model model;
-	std::string modelFile = "../Assets/Models/attack_droid.obj";
-	if (model.loadModel(modelFile)) {
-		std::cout << "Loaded model " << modelFile << "\n";
-	}
+	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+	glEnable(GL_DEPTH_TEST);
 
 	// Shader
 	std::string shaderPath = "Shaders/simple";
@@ -50,7 +48,46 @@ bool ExampleApplication::initialize()
 		std::cerr << "ERROR: Shader creation failed\n";
 		return false;
 	}
-	
+
+	// Model
+	fw::Model model;
+	std::string modelFile = "../Assets/Models/monkey.3ds";
+	if (model.loadModel(modelFile)) {
+		std::cout << "Loaded model " << modelFile << "\n";
+	}
+	if (model.getMeshes().empty()) {
+		std::cerr << "ERROR: Empty model\n";
+		return false;
+	}
+
+	// Buffers
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	const fw::Model::Mesh mesh = model.getMeshes()[0];
+
+	GLsizeiptr vertexSize = sizeof(glm::vec3) * mesh.vertices.size();
+	glGenBuffers(1, &vertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER, vertexSize, &mesh.vertices[0], GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	GLsizeiptr uvSize = sizeof(glm::vec2) * mesh.uvs.size();
+	glGenBuffers(1, &uvBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
+	glBufferData(GL_ARRAY_BUFFER, uvSize, &mesh.uvs[0], GL_STATIC_DRAW);
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+
+	numIndices = mesh.indices.size();
+	GLsizeiptr indexSize = sizeof(unsigned int) * numIndices;
+	glGenBuffers(1, &indexBuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexSize, &mesh.indices[0], GL_STATIC_DRAW);
+
 	// Texture
 	fw::Image image;
 	std::string textureFile = "../Assets/Textures/checker.png";
@@ -71,55 +108,30 @@ bool ExampleApplication::initialize()
 	} else {
 		return false;
 	}
-		
-	// Buffers
-	GLfloat vertices[] = {
-		 0.5f,  0.5f, -1.0f,   1.0f, 1.0f,
-		 0.5f, -0.5f, -1.0f,   1.0f, 0.0f,
-		-0.5f, -0.5f, -1.0f,   0.0f, 0.0f,
-		-0.5f,  0.5f, -1.0f,   0.0f, 1.0f
-	};
-	
-	GLuint indices[] = {
-		0, 1, 3,
-		1, 2, 3
-	};
-
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	GLsizei stride = 5 * sizeof(GLfloat);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, 0);
-	glEnableVertexAttribArray(0);
-
-	GLvoid* offset = (GLvoid*)(3 * sizeof(GLfloat));
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, offset);
-	glEnableVertexAttribArray(1);
-
-	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 
 	return true;
 }
 
 void ExampleApplication::update()
 {
+	if (fw::Input::isKeyDown(SDLK_r)) {
+		fw::Transformation& t = camera.getTransformation();
+		t.position = glm::vec3(0.0f, 0.0f, 3.0f);
+		t.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+	}
+
 	cameraController.update();
 
+	objTransformation.rotate(glm::vec3(0.0f, 1.0f, 0.0f), fw::Framework::getFrameTime() * 0.7f);
+	objTransformation.updateModelMatrix();
+	
 	glm::mat4 viewMatrix = camera.updateViewMatrix();
-	mvpMatrix = camera.getProjectionMatrix() * viewMatrix /* * modelMatrix */;
+	mvpMatrix = camera.getProjectionMatrix() * viewMatrix * objTransformation.getModelMatrix();
 }
 
 void ExampleApplication::render()
 {
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUseProgram(shader.getProgram());
 
 	glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(mvpMatrix));
@@ -131,5 +143,5 @@ void ExampleApplication::render()
 	glUniform1f(timeLocation, fw::Framework::getTimeSinceStart());
 
 	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
 }
