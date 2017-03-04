@@ -3,6 +3,7 @@
 #include <Framework/Image.h>
 #include <Framework/Model.h>
 #include <Framework/Input.h>
+#include <Framework/imgui/imgui.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <fstream>
@@ -124,7 +125,7 @@ void ExampleApplication::update()
 
 	objTransformation.rotate(glm::vec3(0.0f, 1.0f, 0.0f), fw::Framework::getFrameTime() * 0.7f);
 	objTransformation.updateModelMatrix();
-	
+
 	glm::mat4 viewMatrix = camera.updateViewMatrix();
 	mvpMatrix = camera.getProjectionMatrix() * viewMatrix * objTransformation.getModelMatrix();
 }
@@ -144,4 +145,11 @@ void ExampleApplication::render()
 
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+}
+
+void ExampleApplication::gui()
+{
+	//ImGui::Begin("ImGui Window");
+	ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	//ImGui::End();
 }

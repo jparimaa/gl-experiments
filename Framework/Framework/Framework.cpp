@@ -1,5 +1,7 @@
 #include "Framework.h"
 #include "Input.h"
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_sdl_gl3.h"
 #include <iostream>
 
 namespace
@@ -132,6 +134,7 @@ bool Framework::initialize()
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 
@@ -149,6 +152,8 @@ bool Framework::initialize()
 		return false;
 	}
 
+	ImGui_ImplSdlGL3_Init(window);
+	
 	int major = 0;
 	int minor = 0;
 	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &major);
@@ -194,12 +199,17 @@ void Framework::execute()
 
 		app->update();
 		app->render();
+
+		ImGui_ImplSdlGL3_NewFrame(window);
+		app->gui();
+		ImGui::Render();
 		SDL_GL_SwapWindow(window);
 	}
 }
 
 void Framework::uninitialize()
 {
+	ImGui_ImplSdlGL3_Shutdown();
 	SDL_GL_DeleteContext(context);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
@@ -212,6 +222,8 @@ void Framework::handleEvents()
 
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
+		ImGui_ImplSdlGL3_ProcessEvent(&event);
+
 		if (event.type == SDL_QUIT) {
 			running = false;
 		}

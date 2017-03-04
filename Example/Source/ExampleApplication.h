@@ -20,6 +20,7 @@ public:
 	virtual bool initialize() final;
 	virtual void update() final;
 	virtual void render() final;
+	virtual void gui() final;
 
 private:
 	fw::Camera camera;

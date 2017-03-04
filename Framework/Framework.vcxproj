@@ -23,6 +23,10 @@
     <ClCompile Include="Framework\Camera.cpp" />
     <ClCompile Include="Framework\CameraController.cpp" />
     <ClCompile Include="Framework\Framework.cpp" />
+    <ClCompile Include="Framework\imgui\imgui.cpp" />
+    <ClCompile Include="Framework\imgui\imgui_demo.cpp" />
+    <ClCompile Include="Framework\imgui\imgui_draw.cpp" />
+    <ClCompile Include="Framework\imgui\imgui_impl_sdl_gl3.cpp" />
     <ClCompile Include="Framework\Input.cpp" />
     <ClCompile Include="Framework\Model.cpp" />
     <ClCompile Include="Framework\Shader.cpp" />
@@ -35,6 +39,13 @@
     <ClInclude Include="Framework\CameraController.h" />
     <ClInclude Include="Framework\Common.h" />
     <ClInclude Include="Framework\Framework.h" />
+    <ClInclude Include="Framework\imgui\imconfig.h" />
+    <ClInclude Include="Framework\imgui\imgui.h" />
+    <ClInclude Include="Framework\imgui\imgui_impl_sdl_gl3.h" />
+    <ClInclude Include="Framework\imgui\imgui_internal.h" />
+    <ClInclude Include="Framework\imgui\stb_rect_pack.h" />
+    <ClInclude Include="Framework\imgui\stb_textedit.h" />
+    <ClInclude Include="Framework\imgui\stb_truetype.h" />
     <ClInclude Include="Framework\Input.h" />
     <ClInclude Include="Framework\Model.h" />
     <ClInclude Include="Framework\Shader.h" />
@@ -101,11 +112,11 @@
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
-      <DisableLanguageExtensions>true</DisableLanguageExtensions>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -125,7 +136,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
@@ -133,7 +144,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
-      <DisableLanguageExtensions>true</DisableLanguageExtensions>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
