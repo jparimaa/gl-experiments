@@ -6,8 +6,6 @@
 #include <Framework/imgui/imgui.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
-#include <fstream>
-#include <cmath>
 
 namespace
 {
@@ -140,9 +138,7 @@ void MultiDrawApplication::render()
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glUniform1i(textureLocation, 0);
-
-	glUniform1f(timeLocation, fw::Framework::getTimeSinceStart());
-
+	
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
 }
