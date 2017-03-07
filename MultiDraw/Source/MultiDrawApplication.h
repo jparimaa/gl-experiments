@@ -6,6 +6,7 @@
 #include <Framework/Shader.h>
 #include <glm/glm.hpp>
 #include <GL/glew.h>
+#include <vector>
 
 class MultiDrawApplication : public fw::Application
 {
@@ -23,15 +24,31 @@ public:
 	virtual void gui() final;
 
 private:
+	struct DistinctBuffers
+	{
+		GLsizei numBuffers = 0;
+		std::vector<GLuint> VAOs;
+		std::vector<GLuint> vertexBuffers;
+		std::vector<GLuint> uvBuffers;
+		std::vector<GLuint> indexBuffers;
+		std::vector<GLsizei> numIndices;
+	};
+
+	struct MultiBuffer
+	{
+		GLuint VAO = 0;
+		GLuint vertexBuffer = 0;
+		GLuint uvBuffer = 0;
+		GLuint indexBuffer = 0;
+		GLsizei numIndices = 0;
+	};
+
 	fw::Camera camera;
 	fw::CameraController cameraController;
 	fw::Shader shader;
 	fw::Transformation objTransformation;
 	glm::mat4 mvpMatrix;
 	GLuint texture = 0;
-	GLuint VAO = 0;
-	GLuint vertexBuffer = 0;	
-	GLuint uvBuffer = 0;
-	GLuint indexBuffer = 0;
-	unsigned int numIndices = 0;
+	DistinctBuffers distinct;
+	MultiBuffer multi;
 };
