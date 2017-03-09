@@ -34,9 +34,6 @@ private:
 	SDL_Window* window = nullptr;
 	SDL_GLContext context = nullptr;
 
-	int mousePosX = 0;
-	int mousePosY = 0;
-
 	void handleEvents();
 };
 

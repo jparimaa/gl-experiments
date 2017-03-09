@@ -4,6 +4,7 @@
 #include <Framework/Camera.h>
 #include <Framework/CameraController.h>
 #include <Framework/Shader.h>
+#include <Framework/Model.h>
 #include <glm/glm.hpp>
 #include <GL/glew.h>
 #include <vector>
@@ -41,6 +42,8 @@ private:
 		GLuint uvBuffer = 0;
 		GLuint indexBuffer = 0;
 		GLsizei numIndices = 0;
+		std::vector<GLsizei> counts;
+		std::vector<GLsizei> indexLocations;
 	};
 
 	fw::Camera camera;
@@ -51,4 +54,9 @@ private:
 	GLuint texture = 0;
 	DistinctBuffers distinct;
 	MultiBuffer multi;
+	bool renderMultiBuffer = true;
+	unsigned int drawCalls = 0;
+
+	void createDistinctBuffers(const fw::Model& model);
+	void createMultiBuffer(const fw::Model& model);
 };

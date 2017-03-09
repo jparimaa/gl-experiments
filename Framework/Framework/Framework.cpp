@@ -137,6 +137,8 @@ bool Framework::initialize()
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
 	window = SDL_CreateWindow("OpenGL", 400, 100, 1024, 768, SDL_WINDOW_OPENGL);
 	if (!window) {
@@ -204,6 +206,9 @@ void Framework::execute()
 		app->gui();
 		ImGui::Render();
 		SDL_GL_SwapWindow(window);
+
+		Input::clearPressed();
+		Input::clearReleased();
 	}
 }
 
@@ -238,13 +243,9 @@ void Framework::handleEvents()
 		if (event.type == SDL_KEYUP) {
 			Input::setKeyUp(event.key.keysym.sym);
 		}
-		if (event.type == SDL_MOUSEMOTION) {
-			int deltaX = event.motion.x - mousePosX;
-			int deltaY = event.motion.y - mousePosY;
-			Input::setMouseDeltaX(deltaX);
-			Input::setMouseDeltaY(deltaY);
-			mousePosX = event.motion.x;
-			mousePosY = event.motion.y;
+		if (event.type == SDL_MOUSEMOTION) {			
+			Input::setMouseDeltaX(event.motion.xrel);
+			Input::setMouseDeltaY(event.motion.yrel);
 		}
 	}
 }
