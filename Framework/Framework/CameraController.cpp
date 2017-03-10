@@ -2,9 +2,7 @@
 #include "Transformation.h"
 #include "Framework.h"
 #include "Input.h"
-#include "Common.h"
-#include <glm/glm.hpp>
-#include <SDL.h>
+#include "Globals.h"
 #include <iostream>
 
 namespace
@@ -42,6 +40,13 @@ void CameraController::setSensitivity(float s)
 	sensitivity = s * TO_RADIANS;
 }
 
+void CameraController::setResetMode(const glm::vec3& pos, const glm::vec3& rot, SDL_Keycode key)
+{
+	resetPosition = pos;
+	resetRotation = rot;
+	resetKey = key;
+}
+
 void CameraController::update()
 {
 	if (!camera) {
@@ -64,7 +69,7 @@ void CameraController::update()
 	if (Input::isKeyDown(SDLK_d)) {
 		t.move(-t.getLeft() * speed);
 	}
-
+	
 	t.rotate(Transformation::UP, -static_cast<float>(Input::getMouseDeltaX()) * sensitivity);
 	t.rotate(Transformation::LEFT, static_cast<float>(Input::getMouseDeltaY()) * sensitivity);
 	if (t.rotation.x > ROTATION_LIMIT) {
@@ -72,6 +77,11 @@ void CameraController::update()
 	}
 	if (t.rotation.x < -ROTATION_LIMIT) {
 		t.rotation.x = -ROTATION_LIMIT;
+	}
+
+	if (Input::isKeyReleased(resetKey)) {
+		t.position = resetPosition;
+		t.rotation = resetRotation;
 	}
 }
 

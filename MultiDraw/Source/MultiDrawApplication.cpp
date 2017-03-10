@@ -1,13 +1,11 @@
 #include "MultiDrawApplication.h"
 #include <Framework/Framework.h>
-#include <Framework/Image.h>
 #include <Framework/Input.h>
+#include <Framework/Common.h>
 #include <Framework/imgui/imgui.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <SDL.h>
 #include <iostream>
-#include <sstream>
-#include <iomanip>
 
 namespace
 {
@@ -33,99 +31,63 @@ MultiDrawApplication::~MultiDrawApplication()
 	glDeleteBuffers(1, &multi.vertexBuffer);
 	glDeleteBuffers(1, &multi.uvBuffer);
 	glDeleteBuffers(1, &multi.indexBuffer);
-
-	glDeleteTextures(1, &texture);
 }
 
 bool MultiDrawApplication::initialize()
 {
 	cameraController.setCamera(&camera);
+	cameraController.setResetMode(glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.6f, 0.0f), SDLK_r);
+	objTransformation.scale = glm::vec3(0.003f, 0.003f, 0.003f);
+	objTransformation.updateModelMatrix();
+	SDL_SetRelativeMouseMode(SDL_TRUE);
 	glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_MULTISAMPLE);
+	glEnable(GL_MULTISAMPLE);	
 
-	// Shader
 	std::string shaderPath = "Shaders/simple";
 	std::vector<std::string> shaderFiles = {
 		shaderPath + ".vert",
 		shaderPath + ".frag"
 	};
-	if (shader.createProgram(shaderFiles)) {
-		std::cout << "Loaded shader " << shaderPath << " (" << shader.getProgram() << ")\n";
-	} else {
-		std::cerr << "ERROR: Shader creation failed\n";
+	if (!shader.createProgram(shaderFiles)) {
 		return false;
-	}
-
-	// Texture
-	fw::Image image;
+	} 
+	std::cout << "Loaded shader " << shaderPath << " (" << shader.getProgram() << ")\n";
+		
 	std::string textureFile = "../Assets/Textures/checker.png";
-	int width = 0;
-	int height = 0;
-	int channels = 0;
-	if (image.load(textureFile, width, height, channels)) {
-		unsigned char* data = image.getData();
-		glGenTextures(1, &texture);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		std::cout << "Loaded texture " << textureFile << " (" << texture << ")\n";
-	} else {
+	if (!image.load(textureFile)) {
 		return false;
 	}
+	image.create2dTexture();
+	std::cout << "Loaded texture " << textureFile << " (" << image.getTexture() << ")\n";
 
-	// Model
 	fw::Model model;
 	std::string modelFile = "../Assets/Models/sponza.obj";
-	if (model.loadModel(modelFile)) {
-		std::cout << "Loaded model " << modelFile << "\n";
-	}
-	if (model.getMeshes().empty()) {
-		std::cerr << "ERROR: Empty model\n";
+	if (!model.loadModel(modelFile)) {
 		return false;
 	}
+	std::cout << "Loaded model " << modelFile << "\n";
 
 	createDistinctBuffers(model);
 	createMultiBuffer(model);
 
-	objTransformation.scale = glm::vec3(0.003f, 0.003f, 0.003f);
-	objTransformation.updateModelMatrix();
-
-	SDL_SetRelativeMouseMode(SDL_TRUE);
-	
 	return true;
 }
 
 void MultiDrawApplication::update()
 {
-	if (fw::Input::isKeyDown(SDLK_r)) {
-		fw::Transformation& t = camera.getTransformation();
-		t.position = glm::vec3(-1.0f, 1.0f, 0.0f);
-		t.rotation = glm::vec3(0.0f, 0.6f, 0.0f);
-	}
-
 	if (fw::Input::isKeyReleased(SDLK_SPACE)) {
 		renderMultiBuffer = !renderMultiBuffer;
 	}
 	
-	if (fw::Input::isKeyPressed(SDLK_LSHIFT)) {
-		SDL_SetRelativeMouseMode(SDL_FALSE);
-	} 
-	if (fw::Input::isKeyReleased(SDLK_LSHIFT)) {
-		SDL_SetRelativeMouseMode(SDL_TRUE);
-	}
+	fw::toggleRelativeMouseMode();
 
 	if (SDL_GetRelativeMouseMode() == SDL_TRUE) {
 		cameraController.update();
 	}
 	
 	glm::mat4 viewMatrix = camera.updateViewMatrix();
-	mvpMatrix = camera.getProjectionMatrix() * viewMatrix * objTransformation.getModelMatrix();
-	
+	mvpMatrix = camera.getProjectionMatrix() * viewMatrix * objTransformation.getModelMatrix();	
 }
 
 void MultiDrawApplication::render()
@@ -137,7 +99,7 @@ void MultiDrawApplication::render()
 	glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(mvpMatrix));
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture);
+	glBindTexture(GL_TEXTURE_2D, image.getTexture());
 	glUniform1i(textureLocation, 0);
 
 	if (renderMultiBuffer) {
@@ -155,20 +117,10 @@ void MultiDrawApplication::render()
 
 void MultiDrawApplication::gui()
 {
-	//ImGui::Begin("ImGui Window");
-	ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-	std::stringstream ss;
-	ss << std::setprecision(1)
-		<< objTransformation.position.x << " "
-		<< objTransformation.position.y << " "
-		<< objTransformation.position.z;
-	ImGui::Text("Position %.1f %.1f %.1f",
-				camera.getTransformation().position.x,
-				camera.getTransformation().position.y,
-				camera.getTransformation().position.z);
+	fw::displayFps();
+	fw::displayPosition("Position %.1f %.1f %.1f", camera.getTransformation().position);
 	ImGui::Text("MultiBuffer %d", renderMultiBuffer);
 	ImGui::Text("Draw calls %d", drawCalls);
-	//ImGui::End();
 }
 
 void MultiDrawApplication::createDistinctBuffers(const fw::Model& model)

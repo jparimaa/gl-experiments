@@ -87,6 +87,11 @@ bool Model::loadModel(const std::string& file)
 		std::cerr << importer.GetErrorString() << "\n";
 		return false;
 	}
+
+	if (meshes.empty()) {
+		std::cerr << "WARNING: Empty model\n";
+		return false;
+	}
 	return true;
 }
 

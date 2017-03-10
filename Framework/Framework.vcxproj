@@ -38,6 +38,7 @@
     <ClInclude Include="Framework\Camera.h" />
     <ClInclude Include="Framework\CameraController.h" />
     <ClInclude Include="Framework\Common.h" />
+    <ClInclude Include="Framework\Globals.h" />
     <ClInclude Include="Framework\Framework.h" />
     <ClInclude Include="Framework\imgui\imconfig.h" />
     <ClInclude Include="Framework\imgui\imgui.h" />

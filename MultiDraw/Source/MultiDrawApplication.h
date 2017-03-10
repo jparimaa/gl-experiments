@@ -4,6 +4,7 @@
 #include <Framework/Camera.h>
 #include <Framework/CameraController.h>
 #include <Framework/Shader.h>
+#include <Framework/Image.h>
 #include <Framework/Model.h>
 #include <glm/glm.hpp>
 #include <GL/glew.h>
@@ -49,9 +50,9 @@ private:
 	fw::Camera camera;
 	fw::CameraController cameraController;
 	fw::Shader shader;
+	fw::Image image;
 	fw::Transformation objTransformation;
 	glm::mat4 mvpMatrix;
-	GLuint texture = 0;
 	DistinctBuffers distinct;
 	MultiBuffer multi;
 	bool renderMultiBuffer = true;

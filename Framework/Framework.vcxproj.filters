@@ -86,9 +86,6 @@
     <ClInclude Include="Framework\Image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Framework\Common.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Framework\imgui\imconfig.h">
       <Filter>imgui</Filter>
     </ClInclude>
@@ -109,6 +106,12 @@
     </ClInclude>
     <ClInclude Include="Framework\imgui\stb_truetype.h">
       <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\Globals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\Common.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
