@@ -5,6 +5,8 @@
 #include <Framework/CameraController.h>
 #include <Framework/Shader.h>
 #include <Framework/Image.h>
+#include <glm/glm.hpp>
+#include <GL/glew.h>
 
 class InstancingApplication : public fw::Application
 {
@@ -26,4 +28,11 @@ private:
 	fw::CameraController cameraController;
 	fw::Shader shader;
 	fw::Image image;
+	fw::Transformation objTransformation;
+	
+	GLuint VAO = 0;
+	GLuint vertexBuffer = 0;
+	GLuint indexBuffer = 0;
+	GLsizei numIndices = 0;
+	glm::mat4 mvpMatrix;
 };
