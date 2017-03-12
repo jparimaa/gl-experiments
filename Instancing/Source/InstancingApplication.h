@@ -5,8 +5,12 @@
 #include <Framework/CameraController.h>
 #include <Framework/Shader.h>
 #include <Framework/Image.h>
+#include <Framework/Model.h>
 #include <glm/glm.hpp>
 #include <GL/glew.h>
+#include <array>
+
+const GLsizei numPrimitives = 100;
 
 class InstancingApplication : public fw::Application
 {
@@ -27,12 +31,19 @@ private:
 	fw::Camera camera;
 	fw::CameraController cameraController;
 	fw::Shader shader;
-	fw::Image image;
-	fw::Transformation objTransformation;
+	fw::Image image;	
 	
 	GLuint VAO = 0;
 	GLuint vertexBuffer = 0;
 	GLuint indexBuffer = 0;
 	GLsizei numIndices = 0;
-	glm::mat4 mvpMatrix;
+
+	GLuint transformationMatricesBuffer = 0;
+	std::array<glm::vec3, numPrimitives> rotationAxes;
+	std::array<fw::Transformation, numPrimitives> transformations;
+	std::array<glm::mat4, numPrimitives> modelMatrices;
+	std::array<glm::mat4, numPrimitives> mvpMatrices;
+
+	void createVertexBuffer(const fw::Model& model);
+	void createUniformBuffer();
 };

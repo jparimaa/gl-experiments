@@ -1,6 +1,6 @@
 #version 440 core
 
-layout (location = 2) uniform sampler2D tex0;
+layout (location = 0) uniform sampler2D tex0;
 
 in vec2 texCoord;
 in vec3 normal_World;
