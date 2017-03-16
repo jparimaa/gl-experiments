@@ -7,7 +7,7 @@
 #endif
 
 int main(int /*argc*/, char* /*argv[]*/)
-{	
+{
 	fw::Framework framework;
 	bool success = framework.initialize();
 	if (success) {
@@ -15,8 +15,8 @@ int main(int /*argc*/, char* /*argv[]*/)
 		success = framework.setApplication(&app);
 		if (success) {
 			framework.execute();
-			framework.uninitialize();
 		}
+		framework.uninitialize();
 	}
 
 	if (!success) {
