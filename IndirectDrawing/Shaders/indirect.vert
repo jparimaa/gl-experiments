@@ -14,12 +14,18 @@ layout (std430, binding = 1) readonly buffer MvpTransforms
     mat4 mvpMatrix[];	
 };
 
+layout (std430, binding = 2) readonly buffer IndexToMatrix
+{
+    int indexToMatrix[];
+};
+
 out vec2 texCoord;
 out vec3 normal_World;
 
 void main()
 {
-	gl_Position = mvpMatrix[gl_DrawIDARB] * vec4(position, 1.0);
+	int i = indexToMatrix[gl_DrawIDARB];	
+	gl_Position = mvpMatrix[i] * vec4(position, 1.0);	
 	texCoord = tex;
-	normal_World = normalize(mat3(modelMatrix[gl_DrawIDARB]) * normal);
+	normal_World = normalize(mat3(modelMatrix[i]) * normal);
 }

@@ -41,20 +41,20 @@ private:
 
 	unsigned int numModels = 0;
 	unsigned int numMeshes = 0;
-	std::size_t matrixBufferSize = 0;
-
+	
 	GLuint commandBuffer = 0;
-	IndirectCommand* drawCmd = nullptr;
-
+	
 	GLuint VAO = 0;
 	GLuint vertexBuffer = 0;
 	GLuint indexBuffer = 0;
 
+	std::size_t transformMatrixBufferSize = 0;
+	std::size_t indexToMatrixBufferSize = 0;
 	GLuint modelBuffer = 0;
-	GLuint mvpBuffer = 1;
+	GLuint mvpBuffer = 0;
+	GLuint indexToMatrixBuffer = 0;
 
 	std::vector<fw::Transformation> transforms;
-	std::vector<glm::vec3> rotationAxes;
 	std::vector<glm::mat4> modelMatrices;
 	std::vector<glm::mat4> mvpMatrices;
 

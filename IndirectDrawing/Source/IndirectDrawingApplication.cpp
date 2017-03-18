@@ -16,6 +16,7 @@ namespace
 const GLint textureLocation = 0;
 const GLuint modelBufferIndex = 0;
 const GLuint mvpBufferIndex = 1;
+const GLuint indexToMatrixBufferIndex = 2;
 
 } // anonymous
 
@@ -31,14 +32,15 @@ IndirectDrawingApplication::~IndirectDrawingApplication()
 	glDeleteBuffers(1, &indexBuffer);
 	glDeleteBuffers(1, &modelBuffer);
 	glDeleteBuffers(1, &mvpBuffer);
+	glDeleteBuffers(1, &indexToMatrixBuffer);
 }
 
 bool IndirectDrawingApplication::initialize()
 {
 	cameraController.setCamera(&camera);
-	cameraController.setResetMode(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), SDLK_r);
+	cameraController.setResetMode(glm::vec3(0.7f, 1.0f, 0.0f), glm::vec3(-0.8f, 1.6f, 0.0f), SDLK_r);
 	SDL_SetRelativeMouseMode(SDL_TRUE);
-	
+
 	std::string shaderPath = "Shaders/indirect";
 	std::vector<std::string> shaderFiles = {
 		shaderPath + ".vert",
@@ -57,7 +59,7 @@ bool IndirectDrawingApplication::initialize()
 	std::cout << "Loaded texture " << textureFile << " (" << image.getTexture() << ")\n";
 
 	fw::Model model;
-	std::string modelFile = "../Assets/Models/monkey.3ds";
+	std::string modelFile = "../Assets/Models/Untracked/attack_droid.obj";
 	if (!model.loadModel(modelFile)) {
 		return false;
 	}
@@ -65,24 +67,17 @@ bool IndirectDrawingApplication::initialize()
 
 	numModels = 1;
 	numMeshes = model.getMeshes().size();
-	matrixBufferSize = numModels * sizeof(glm::mat4);
+	std::cout << "numMeshes: " << numMeshes << "\n";
+	transformMatrixBufferSize = numModels * sizeof(glm::mat4);
+	indexToMatrixBufferSize = numMeshes * sizeof(unsigned int);
 
-	createCommandBuffer(model);
 	createVertexbuffer(model);
 	createTransformBuffers();
+	createCommandBuffer(model);
 
 	transforms.resize(numModels);
-	rotationAxes.resize(numModels);
 	modelMatrices.resize(numModels);
 	mvpMatrices.resize(numModels);
-
-	float randMax = static_cast<float>(RAND_MAX);
-	for (unsigned int i = 0; i < numModels; ++i) {
-		float rx = static_cast<float>(rand()) / randMax;
-		float ry = static_cast<float>(rand()) / randMax;
-		float rz = static_cast<float>(rand()) / randMax;
-		rotationAxes[i] = glm::normalize(glm::vec3(rx, ry, rz));
-	}
 
 	glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
@@ -102,7 +97,8 @@ void IndirectDrawingApplication::update()
 	glm::mat4 viewMatrix = camera.updateViewMatrix();
 
 	for (unsigned int i = 0; i < numModels; ++i) {
-		transforms[i].rotate(rotationAxes[i], 0.5f * fw::Framework::getFrameTime());
+		//transforms[i].rotate(glm::vec3(0.0f, 1.0f, 0.0f), 0.2f * fw::Framework::getFrameTime());
+		transforms[i].scale = glm::vec3(0.02f, 0.02f, 0.02f);
 		modelMatrices[i] = transforms[i].updateModelMatrix();
 		mvpMatrices[i] = camera.getProjectionMatrix() * viewMatrix * modelMatrices[i];
 	}
@@ -120,47 +116,54 @@ void IndirectDrawingApplication::render()
 	GLbitfield access = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
 
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, modelBuffer);
-	glm::mat4* modelBufferData = (glm::mat4*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, matrixBufferSize, access);
+	glm::mat4* modelBufferData = (glm::mat4*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, transformMatrixBufferSize, access);
 	std::copy(modelMatrices.begin(), modelMatrices.end(), modelBufferData);
 	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, mvpBuffer);
-	glm::mat4* mvpBufferData = (glm::mat4*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, matrixBufferSize, access);
+	glm::mat4* mvpBufferData = (glm::mat4*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, transformMatrixBufferSize, access);
 	std::copy(mvpMatrices.begin(), mvpMatrices.end(), mvpBufferData);
 	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-	
+
+	glBindVertexArray(VAO);
 	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, commandBuffer);
-	glBindVertexArray(VAO);	
-	glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, nullptr, numMeshes, 0);
+	glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, 0, numMeshes, 0);
 }
 
 void IndirectDrawingApplication::gui()
 {
 	fw::displayFps();
 	fw::displayPosition("Position %.1f %.1f %.1f", camera.getTransformation().position);
+	fw::displayPosition("Rotation %.1f %.1f %.1f", camera.getTransformation().rotation);
 }
 
 void IndirectDrawingApplication::createCommandBuffer(const fw::Model& model)
 {
-	const fw::Model::Meshes& meshes = model.getMeshes();
-
 	std::size_t cmdSize = numMeshes * sizeof(IndirectCommand);
 	glGenBuffers(1, &commandBuffer);
 	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, commandBuffer);
 	glBufferStorage(GL_DRAW_INDIRECT_BUFFER, cmdSize, nullptr, GL_MAP_WRITE_BIT);
 	GLbitfield access = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
-	drawCmd = (IndirectCommand*)glMapBufferRange(GL_DRAW_INDIRECT_BUFFER, 0, cmdSize, access);
+	IndirectCommand* drawCmd = (IndirectCommand*)glMapBufferRange(GL_DRAW_INDIRECT_BUFFER, 0, cmdSize, access);
 
 	GLuint index = 0;
+	const fw::Model::Meshes& meshes = model.getMeshes();
 	for (unsigned int i = 0; i < numMeshes; ++i) {
 		drawCmd[i].vertexCount = meshes[i].indices.size();
 		drawCmd[i].instanceCount = 1;
 		drawCmd[i].firstIndex = index;
 		drawCmd[i].baseVertex = 0;
-		drawCmd[i].baseInstance = 0;
+		drawCmd[i].baseInstance = i;
 		index += sizeof(GLuint) * drawCmd[i].vertexCount;
 	}
 	glUnmapBuffer(GL_DRAW_INDIRECT_BUFFER);
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, indexToMatrixBuffer);
+	unsigned int* indexToMatrix = (unsigned int*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, indexToMatrixBufferSize, access);
+	for (unsigned int i = 0; i < numMeshes; ++i) {
+		indexToMatrix[i] = 0;
+	}
+	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 }
 
 void IndirectDrawingApplication::createVertexbuffer(const fw::Model& model)
@@ -216,11 +219,16 @@ void IndirectDrawingApplication::createTransformBuffers()
 {
 	glGenBuffers(1, &modelBuffer);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, modelBuffer);
-	glBufferStorage(GL_SHADER_STORAGE_BUFFER, matrixBufferSize, nullptr, GL_MAP_WRITE_BIT);
+	glBufferStorage(GL_SHADER_STORAGE_BUFFER, transformMatrixBufferSize, nullptr, GL_MAP_WRITE_BIT);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, modelBufferIndex, modelBuffer);
 
 	glGenBuffers(1, &mvpBuffer);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, mvpBuffer);
-	glBufferStorage(GL_SHADER_STORAGE_BUFFER, matrixBufferSize, nullptr, GL_MAP_WRITE_BIT);
+	glBufferStorage(GL_SHADER_STORAGE_BUFFER, transformMatrixBufferSize, nullptr, GL_MAP_WRITE_BIT);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, mvpBufferIndex, mvpBuffer);
+
+	glGenBuffers(1, &indexToMatrixBuffer);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, indexToMatrixBuffer);
+	glBufferStorage(GL_SHADER_STORAGE_BUFFER, indexToMatrixBufferSize, nullptr, GL_MAP_WRITE_BIT);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, indexToMatrixBufferIndex, indexToMatrixBuffer);
 }
