@@ -153,8 +153,8 @@ void IndirectDrawingApplication::createCommandBuffer(const fw::Model& model)
 		drawCmd[i].instanceCount = 1;
 		drawCmd[i].firstIndex = index;
 		drawCmd[i].baseVertex = 0;
-		drawCmd[i].baseInstance = i;
-		index += sizeof(GLuint) * drawCmd[i].vertexCount;
+		drawCmd[i].baseInstance = 0;
+		index += drawCmd[i].vertexCount;
 	}
 	glUnmapBuffer(GL_DRAW_INDIRECT_BUFFER);
 
