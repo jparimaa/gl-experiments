@@ -8,6 +8,10 @@ SimpleIndirectApplication::SimpleIndirectApplication()
 
 SimpleIndirectApplication::~SimpleIndirectApplication()
 {
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &vertexBuffer);
+	glDeleteBuffers(1, &indexBuffer);
+	glDeleteBuffers(1, &commandBuffer);
 }
 
 bool SimpleIndirectApplication::initialize()
