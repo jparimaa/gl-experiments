@@ -11,7 +11,7 @@
 
 struct IndirectCommand
 {
-	GLuint vertexCount = 0;
+	GLuint count = 0;
 	GLuint instanceCount = 0;
 	GLuint firstIndex = 0;
 	GLuint baseVertex = 0;
@@ -55,10 +55,11 @@ private:
 	GLuint indexToMatrixBuffer = 0;
 
 	std::vector<fw::Transformation> transforms;
+	std::vector<glm::vec3> axes;
 	std::vector<glm::mat4> modelMatrices;
 	std::vector<glm::mat4> mvpMatrices;
 
-	void createCommandBuffer(const fw::Model& model);
-	void createVertexbuffer(const fw::Model& model);
+	void createCommandBuffer(const std::vector<fw::Model>& models);
+	void createVertexbuffer(const std::vector<fw::Model>& models);
 	void createTransformBuffers();
 };

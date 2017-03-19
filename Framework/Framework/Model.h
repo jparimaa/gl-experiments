@@ -27,10 +27,6 @@ public:
 
 	explicit Model();
 	~Model();
-	Model(const Model&) = delete;
-	Model(Model&&) = delete;
-	Model& operator=(const Model&) = delete;
-	Model& operator=(Model&&) = delete;
 
 	bool loadModel(const std::string& file);
 	const Meshes& getMeshes() const;
