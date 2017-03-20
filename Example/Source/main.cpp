@@ -1,28 +1,16 @@
 #include "ExampleApplication.h"
-#include <Framework/Framework.h>
-#include <iostream>
+#include <Framework/Common.h>
+
+#define CHECK_MEMORY_LEAKS
+#ifdef CHECK_MEMORY_LEAKS
+#include <vld.h>
+#endif
 
 #ifdef _WIN32
 #undef main
 #endif
 
 int main(int /*argc*/, char* /*argv[]*/)
-{	
-	fw::Framework framework;
-	bool success = framework.initialize();
-	if (success) {
-		ExampleApplication app;
-		success = framework.setApplication(&app);
-		if (success) {
-			framework.execute();
-			framework.uninitialize();
-		}
-	}
-
-	if (!success) {
-		std::cout << "Press any key to exit\n";
-		std::cin.get();
-		return 1;
-	}
-	return 0;
+{
+	return fw::executeGenericMain<ExampleApplication>();
 }

@@ -1,14 +1,39 @@
 #pragma once
 
+#include "Framework.h"
 #include "Input.h"
 #include "imgui/imgui.h"
 #include <glm/glm.hpp>
 #include <SDL.h>
+#include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <cstdlib>
 
 namespace fw
 {
+
+template <typename T>
+inline int executeGenericMain()
+{
+	fw::Framework framework;
+	bool success = framework.initialize();
+	if (success) {
+		T app;
+		success = framework.setApplication(&app);
+		if (success) {
+			framework.execute();
+		}
+		framework.uninitialize();
+	}
+
+	if (!success) {
+		std::cout << "Press any key to exit\n";
+		std::cin.get();
+		return EXIT_FAILURE;
+	}
+	return EXIT_SUCCESS;
+}
 
 inline void toggleRelativeMouseMode(SDL_Keycode k = SDLK_LSHIFT)
 {
