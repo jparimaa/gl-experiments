@@ -38,7 +38,7 @@ private:
 	GLuint texture = 0;
 	GLenum target = GL_TEXTURE_2D;
 	GLint level = 0;
-	GLint internalFormat = GL_RGBA;
+	GLint internalFormat = GL_RGBA8;
 	GLenum format = GL_RGBA;
 	GLenum type = GL_UNSIGNED_BYTE;
 

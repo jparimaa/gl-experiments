@@ -1,5 +1,7 @@
 #include "Image.h"
 #include <iostream>
+#include <cmath>
+#include <algorithm>
 
 namespace fw
 {
@@ -47,8 +49,10 @@ int Image::getChannels() const
 GLuint Image::create2dTexture()
 {
 	glGenTextures(1, &texture);
-	glBindTexture(target, texture);
-	glTexImage2D(target, level, internalFormat, width, height, 0, format, type, data);
+	glBindTexture(target, texture);	
+	GLsizei numMipmaps = static_cast<GLsizei>(std::floor(log2(static_cast<double>(std::max(width, height)))));
+	glTexStorage2D(target, numMipmaps, internalFormat, width, height);
+	glTexSubImage2D(target, 0, 0, 0, width, height, format, type, data);
 	glGenerateMipmap(target);
 	glTexParameteri(target, GL_TEXTURE_WRAP_S, sWrap);
 	glTexParameteri(target, GL_TEXTURE_WRAP_T, tWrap);
