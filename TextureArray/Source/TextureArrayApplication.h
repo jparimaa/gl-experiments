@@ -22,9 +22,11 @@ public:
 
 private:
 	fw::Shader shader;
-	GLuint texture = 0;
+	GLuint textureArray = 0;
 	GLuint VAO = 0;
 	GLuint vertexBuffer = 0;	
-	GLuint uvBuffer = 0;
 	GLuint indexBuffer = 0;
+
+	void createVertexBuffer();
+	void createTextures();
 };

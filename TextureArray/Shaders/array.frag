@@ -1,14 +1,13 @@
 #version 440 core
 
-layout (location = 1) uniform float time;
-layout (location = 2) uniform sampler2D tex0;
+layout (binding = 0) uniform sampler2DArray texArray;
+layout (location = 0) uniform int layer;
 
-in vec2 texCoord;
+in vec2 uv;
 
 out vec4 color;
 
 void main()
 {
-	float f = sin(time);
-	color = vec4(texture(tex0, texCoord).gb, f, 1.0f);
+	color = texture(texArray, vec3(uv.x, uv.y, layer));
 } 
