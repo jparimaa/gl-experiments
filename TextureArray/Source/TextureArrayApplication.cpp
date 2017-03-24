@@ -62,7 +62,7 @@ void TextureArrayApplication::render()
 	for (int i = 0; i < numQuads; ++i) {
 		glUniform1i(layerLocation, i);
 		glDrawElementsBaseVertex(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, i * 4);
-		// Could also use instaning and draw id for layer
+		// Could also use instaning and instace_id for layer
 	}
 }
 
