@@ -21,5 +21,11 @@ public:
 	virtual void gui() final;
 
 private:
-	fw::Shader shader;
+	fw::Shader loadStoreShader;
+	fw::Shader displayShader;
+	GLuint VAO;
+	GLuint texture;
+
+	int width = 512;
+	int height = 512;
 };
