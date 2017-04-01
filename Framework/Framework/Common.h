@@ -11,6 +11,8 @@
 #include <iomanip>
 #include <cstdlib>
 #include <ostream>
+#include <iterator>
+#include <vector>
 
 namespace fw
 {
@@ -81,6 +83,36 @@ inline void printExtensions(std::ostream& stream)
 	for (GLint i = 0; i < numExtensions; ++i) {
 		stream << glGetStringi(GL_EXTENSIONS, i) << "\n";
 	}
+}
+
+inline bool isShaderCompiled(GLuint shader)
+{
+	GLint isCompiled = 0;
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
+	if (isCompiled == GL_FALSE) {		
+		GLint maxLength = 0;
+		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+		std::vector<GLchar> infoLog(maxLength);
+		glGetShaderInfoLog(shader, maxLength, &maxLength, &infoLog[0]);
+		std::copy(infoLog.begin(), infoLog.end(), std::ostream_iterator<GLchar>(std::cerr, ""));
+		return false;
+	}
+	return true;
+}
+
+inline bool isProgramLinked(GLuint program)
+{
+	GLint isLinked = 0;
+	glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+	if (isLinked == GL_FALSE) {
+		GLint maxLength = 0;
+		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
+		std::vector<GLchar> infoLog(maxLength);
+		glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
+		std::copy(infoLog.begin(), infoLog.end(), std::ostream_iterator<GLchar>(std::cerr, ""));
+		return false;
+	}
+	return true;
 }
 
 } // fw

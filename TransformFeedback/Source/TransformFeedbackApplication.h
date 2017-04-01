@@ -21,4 +21,17 @@ public:
 	virtual void gui() final;
 
 private:
+	GLuint transformProgram = 0;
+	GLuint transformVAO = 0;
+	GLuint transformBuffer = 0;
+
+	GLuint transformFeedback = 0;
+
+	fw::Shader feedbackShader;
+	GLuint feedbackVAO = 0;	
+	GLuint feedbackBuffer = 0;
+	
+	bool createFeedbackProgram();
+	void createBuffers();
+	void initTransformFeedback();
 };
