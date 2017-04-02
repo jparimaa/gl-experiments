@@ -1,8 +1,7 @@
 #include "ExampleApplication.h"
 #include <Framework/Framework.h>
-#include <Framework/Image.h>
-#include <Framework/Model.h>
 #include <Framework/Input.h>
+#include <Framework/Common.h>
 #include <Framework/imgui/imgui.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
@@ -28,84 +27,38 @@ ExampleApplication::~ExampleApplication()
 	glDeleteBuffers(1, &vertexBuffer);
 	glDeleteBuffers(1, &uvBuffer);
 	glDeleteBuffers(1, &indexBuffer);
-	glDeleteTextures(1, &texture);
 }
 
 bool ExampleApplication::initialize()
 {
-	cameraController.setCamera(&camera);
-	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-	glEnable(GL_DEPTH_TEST);
+	fw::printSystemInfo();
 
-	// Shader
-	std::string shaderPath = "Shaders/simple";
-	std::vector<std::string> shaderFiles = {
-		shaderPath + ".vert",
-		shaderPath + ".frag"
-	};
-	if (shader.createProgram(shaderFiles)) {
-		std::cout << "Loaded shader " << shaderPath << " (" << shader.getProgram() << ")\n";
-	} else {
-		std::cerr << "ERROR: Shader creation failed\n";
+	cameraController.setCamera(&camera);
+	
+	std::string path = "Shaders/simple";
+	if (!shader.createProgram({path + ".vert", path + ".frag"})) {
 		return false;
 	}
-
-	// Model
+	std::cout << "Loaded shader " << path << " (" << shader.getProgram() << ")\n";
+	
 	fw::Model model;
 	std::string modelFile = "../Assets/Models/monkey.3ds";
-	if (model.loadModel(modelFile)) {
-		std::cout << "Loaded model " << modelFile << "\n";
-	}
-	if (model.getMeshes().empty()) {
-		std::cerr << "ERROR: Empty model\n";
+	if (!model.loadModel(modelFile)) {
 		return false;
 	}
+	std::cout << "Loaded model " << modelFile << "\n";
 
-	// Buffers
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	const fw::Model::Mesh mesh = model.getMeshes()[0];
-
-	GLsizeiptr vertexSize = sizeof(glm::vec3) * mesh.vertices.size();
-	glGenBuffers(1, &vertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, vertexSize, &mesh.vertices[0], GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(0);
-
-	GLsizeiptr uvSize = sizeof(glm::vec2) * mesh.uvs.size();
-	glGenBuffers(1, &uvBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
-	glBufferData(GL_ARRAY_BUFFER, uvSize, &mesh.uvs[0], GL_STATIC_DRAW);
-
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(1);
-
-	numIndices = mesh.indices.size();
-	GLsizeiptr indexSize = sizeof(unsigned int) * numIndices;
-	glGenBuffers(1, &indexBuffer);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexSize, &mesh.indices[0], GL_STATIC_DRAW);
-
-	// Texture
-	fw::Image image;
 	std::string textureFile = "../Assets/Textures/checker.png";
-	if (image.load(textureFile)) {
-		unsigned char* data = image.getData();
-		glGenTextures(1, &texture);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.getWidth(), image.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		std::cout << "Loaded texture " << textureFile << " (" << texture << ")\n";
-	} else {
+	if (!image.load(textureFile)) {
 		return false;
 	}
+	image.create2dTexture();
+	std::cout << "Loaded texture " << textureFile << " (" << image.getTexture() << ")\n";
+
+	createBuffers(model);
+
+	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+	glEnable(GL_DEPTH_TEST);
 
 	return true;
 }
@@ -135,7 +88,7 @@ void ExampleApplication::render()
 	glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(mvpMatrix));
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture);
+	glBindTexture(GL_TEXTURE_2D, image.getTexture());
 	glUniform1i(textureLocation, 0);
 
 	glUniform1f(timeLocation, fw::Framework::getTimeSinceStart());
@@ -146,7 +99,35 @@ void ExampleApplication::render()
 
 void ExampleApplication::gui()
 {
-	//ImGui::Begin("ImGui Window");
-	ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-	//ImGui::End();
+	fw::displayFps();
+}
+
+void ExampleApplication::createBuffers(const fw::Model& model)
+{
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	const fw::Model::Mesh mesh = model.getMeshes()[0];
+
+	GLsizeiptr vertexSize = sizeof(glm::vec3) * mesh.vertices.size();
+	glGenBuffers(1, &vertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+	glBufferStorage(GL_ARRAY_BUFFER, vertexSize, &mesh.vertices[0], 0);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	GLsizeiptr uvSize = sizeof(glm::vec2) * mesh.uvs.size();
+	glGenBuffers(1, &uvBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
+	glBufferStorage(GL_ARRAY_BUFFER, uvSize, &mesh.uvs[0], 0);
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+
+	numIndices = mesh.indices.size();
+	GLsizeiptr indexSize = sizeof(unsigned int) * numIndices;
+	glGenBuffers(1, &indexBuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+	glBufferStorage(GL_ELEMENT_ARRAY_BUFFER, indexSize, &mesh.indices[0], 0);
 }

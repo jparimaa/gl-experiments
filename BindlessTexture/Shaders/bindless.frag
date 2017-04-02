@@ -1,4 +1,4 @@
-#version 440 core
+#version 450 core
 #extension GL_ARB_bindless_texture : require
 
 layout(binding = 0) uniform Textures

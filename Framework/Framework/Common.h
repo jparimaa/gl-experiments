@@ -115,4 +115,12 @@ inline bool isProgramLinked(GLuint program)
 	return true;
 }
 
+inline void printSystemInfo()
+{
+	std::cout << "Vendor: " << glGetString(GL_VENDOR) << "\n";
+	std::cout << "GFX: " << glGetString(GL_RENDERER) << "\n";
+	std::cout << "OpenGL: " << glGetString(GL_VERSION) << "\n";
+	std::cout << "GLSL: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n\n";
+}
+
 } // fw

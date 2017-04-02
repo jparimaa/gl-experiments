@@ -35,15 +35,11 @@ bool TransformFeedbackApplication::initialize()
 	glClearColor(0.0f, 0.0f, 0.3f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
 
-	std::string shaderPath = "Shaders/feedback";
-	std::vector<std::string> shaderFiles = {
-		shaderPath + ".vert",
-		shaderPath + ".frag"
-	};
-	if (!feedbackShader.createProgram(shaderFiles)) {
+	std::string path = "Shaders/feedback";
+	if (!feedbackShader.createProgram({path + ".vert", path + ".frag"})) {
 		return false;
 	}
-	std::cout << "Loaded shader " << shaderPath << " (" << feedbackShader.getProgram() << ")\n";
+	std::cout << "Loaded shader " << path << " (" << feedbackShader.getProgram() << ")\n";
 
 	if (!createFeedbackProgram()) {
 		return false;
@@ -135,7 +131,7 @@ void TransformFeedbackApplication::createBuffers()
 	glBindVertexArray(transformVAO);
 	glGenBuffers(1, &transformBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, transformBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
+	glBufferStorage(GL_ARRAY_BUFFER, sizeof(data), data, 0);
 	glVertexAttribPointer(positionIndex, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(positionIndex);
 	
@@ -143,7 +139,7 @@ void TransformFeedbackApplication::createBuffers()
 	glBindVertexArray(feedbackVAO);
 	glGenBuffers(1, &feedbackBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, feedbackBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(data), 0, GL_STATIC_DRAW);
+	glBufferStorage(GL_ARRAY_BUFFER, sizeof(data), 0, 0);
 	glVertexAttribPointer(positionIndex, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(positionIndex);
 }

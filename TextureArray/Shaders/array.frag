@@ -1,4 +1,4 @@
-#version 440 core
+#version 450 core
 
 layout (binding = 0) uniform sampler2DArray texArray;
 layout (location = 0) uniform int layer;

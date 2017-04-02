@@ -160,7 +160,6 @@ bool Framework::initialize()
 	int minor = 0;
 	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &major);
 	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minor);
-	std::cout << "OpenGL version: " << major << "." << minor << "\n";
 
 	if (glDebugMessageCallback) {
 		glEnable(GL_DEBUG_OUTPUT);
@@ -168,9 +167,9 @@ bool Framework::initialize()
 		GLuint unusedIds = 0;
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, &unusedIds, GL_TRUE);
 		glDebugMessageCallback(glDebugCallback, nullptr);
-		std::cout << "Debug context enabled\n";
+		std::cout << "Debug context enabled\n\n";
 	} else {
-		std::cout << "Debug context NOT enabled\n";
+		std::cout << "Debug context NOT enabled\n\n";
 	}
 	
 	return true;

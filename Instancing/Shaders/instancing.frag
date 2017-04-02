@@ -1,6 +1,6 @@
-#version 440 core
+#version 450 core
 
-layout (location = 0) uniform sampler2D tex0;
+layout (binding = 0) uniform sampler2D tex0;
 
 in vec2 texCoord;
 in vec3 normal_World;
