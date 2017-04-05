@@ -118,7 +118,7 @@ void MultiDrawApplication::render()
 void MultiDrawApplication::gui()
 {
 	fw::displayFps();
-	fw::displayPosition("Position %.1f %.1f %.1f", camera.getTransformation().position);
+	fw::displayVec3("Position %.1f %.1f %.1f", camera.getTransformation().position);
 	ImGui::Text("MultiBuffer %d", renderMultiBuffer);
 	ImGui::Text("Draw calls %d", drawCalls);
 }

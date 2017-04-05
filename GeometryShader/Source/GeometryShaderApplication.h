@@ -6,6 +6,7 @@
 #include <Framework/Shader.h>
 #include <Framework/Model.h>
 #include <Framework/Image.h>
+#include <Framework/Transformation.h>
 #include <glm/glm.hpp>
 #include <GL/glew.h>
 
@@ -28,6 +29,14 @@ private:
 	fw::Camera camera;
 	fw::CameraController cameraController;
 	fw::Shader shader;
-	fw::Image image;
+	fw::Image image;	
 	glm::mat4 mvpMatrix;
+	fw::Transformation transform;
+
+	unsigned int numIndices = 0;
+	GLuint VAO = 0;
+	GLuint vertexBuffer = 0;
+	GLuint indexBuffer = 0;
+
+	void createBuffer(const fw::Model& model);
 };

@@ -1,13 +1,38 @@
 #version 450 core
-layout (location = 0) in vec3 position;
-layout (location = 1) in vec2 tex;
+layout (triangles) in;
+layout (triangle_strip, max_vertices = 3) out;
 
-layout (location = 0) uniform mat4 MVP;
+layout (location = 2) uniform float time;
 
-out vec2 texCoord;
+in vec2 texVS[];
+in vec3 normalWorldVS[];
 
-void main()
+out vec2 texGS;
+out vec3 normalWorldGS;
+
+vec3 getDirection() 
 {
-	gl_Position = MVP * vec4(position, 1.0);
-	texCoord = tex;
+   vec3 a = vec3(gl_in[0].gl_Position) - vec3(gl_in[1].gl_Position);
+   vec3 b = vec3(gl_in[2].gl_Position) - vec3(gl_in[1].gl_Position);
+   return normalize(cross(a, b));
+}  
+
+vec4 explode(vec4 position, vec3 dir) 
+{
+    float magnitude = 1.0f;
+    vec3 direction = dir * ((sin(time) + 1.0f) / 2.0f) * magnitude; 
+    return position + vec4(direction, 0.0f);
+}
+
+void main() 
+{
+	vec3 dir = getDirection();
+	
+	for (int i = 0; i < 3; ++i) {
+		gl_Position = explode(gl_in[i].gl_Position, dir);
+		texGS = texVS[i];
+		normalWorldGS = normalWorldVS[i];
+		EmitVertex();
+	}    
+    EndPrimitive();
 }

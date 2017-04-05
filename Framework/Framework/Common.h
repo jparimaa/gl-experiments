@@ -2,6 +2,7 @@
 
 #include "Framework.h"
 #include "Input.h"
+#include "Model.h"
 #include "imgui/imgui.h"
 #include <glm/glm.hpp>
 #include <GL/glew.h>
@@ -54,9 +55,9 @@ inline void displayFps()
 	ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 }
 
-inline void displayPosition(const std::string& text, const glm::vec3& pos)
+inline void displayVec3(const std::string& text, const glm::vec3& v)
 {
-	ImGui::Text(text.c_str(), pos.x, pos.y, pos.z);
+	ImGui::Text(text.c_str(), v.x, v.y, v.z);
 }
 
 inline GLubyte getRandomColor()
@@ -121,6 +122,28 @@ inline void printSystemInfo()
 	std::cout << "GFX: " << glGetString(GL_RENDERER) << "\n";
 	std::cout << "OpenGL: " << glGetString(GL_VERSION) << "\n";
 	std::cout << "GLSL: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n\n";
+}
+
+void inline loadBufferData(const Model& model, std::vector<float>& data, std::vector<unsigned int>& indices)
+{
+	unsigned int indexOffset = 0;
+
+	for (const auto& mesh : model.getMeshes()) {
+		for (unsigned int i = 0; i < mesh.vertices.size(); ++i) {
+			data.push_back(mesh.vertices[i].x);
+			data.push_back(mesh.vertices[i].y);
+			data.push_back(mesh.vertices[i].z);
+			data.push_back(mesh.uvs[i].x);
+			data.push_back(mesh.uvs[i].y);
+			data.push_back(mesh.normals[i].x);
+			data.push_back(mesh.normals[i].y);
+			data.push_back(mesh.normals[i].z);
+		}
+		for (const auto& index : mesh.indices) {
+			indices.push_back(index + indexOffset);
+		}
+		indexOffset += mesh.vertices.size();
+	}
 }
 
 } // fw

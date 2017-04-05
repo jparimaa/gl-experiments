@@ -123,7 +123,7 @@ void InstancingApplication::render()
 void InstancingApplication::gui()
 {
 	fw::displayFps();
-	fw::displayPosition("Position %.1f %.1f %.1f", camera.getTransformation().position);
+	fw::displayVec3("Position %.1f %.1f %.1f", camera.getTransformation().position);
 }
 
 void InstancingApplication::createVertexBuffer(const fw::Model& model)

@@ -144,8 +144,8 @@ void IndirectDrawingApplication::render()
 void IndirectDrawingApplication::gui()
 {
 	fw::displayFps();
-	fw::displayPosition("Position %.1f %.1f %.1f", camera.getTransformation().position);
-	fw::displayPosition("Rotation %.1f %.1f %.1f", camera.getTransformation().rotation);
+	fw::displayVec3("Position %.1f %.1f %.1f", camera.getTransformation().position);
+	fw::displayVec3("Rotation %.1f %.1f %.1f", camera.getTransformation().rotation);
 }
 
 void IndirectDrawingApplication::createVertexbuffer(const std::vector<fw::Model>& models)
