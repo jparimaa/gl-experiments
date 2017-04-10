@@ -9,10 +9,11 @@
 namespace
 {
 
-const GLuint mvpMatrixLocation = 0;
-const GLuint modelMatrixLocation = 1;
-const GLuint timeLocation = 2;
-const GLuint textureBinding = 3;
+const GLuint projectionMatrixLocation = 0;
+const GLuint modelViewMatrixLocation = 1;
+const GLuint modelMatrixLocation = 2;
+const GLuint timeLocation = 3;
+const GLuint textureBinding = 4;
 
 }
 
@@ -67,8 +68,8 @@ void GeometryShaderApplication::update()
 	cameraController.update();
 	fw::toggleRelativeMouseMode();
 
-	glm::mat4 viewMatrix = camera.updateViewMatrix();
-	mvpMatrix = camera.getProjectionMatrix() * viewMatrix * transform.getModelMatrix();
+	const glm::mat4& viewMatrix = camera.updateViewMatrix();
+	modelViewMatrix = viewMatrix * transform.getModelMatrix();
 }
 
 void GeometryShaderApplication::render()
@@ -76,7 +77,8 @@ void GeometryShaderApplication::render()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUseProgram(shader.getProgram());
 		
-	glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(mvpMatrix));
+	glUniformMatrix4fv(projectionMatrixLocation, 1, 0, glm::value_ptr(camera.getProjectionMatrix()));
+	glUniformMatrix4fv(modelViewMatrixLocation, 1, 0, glm::value_ptr(modelViewMatrix));
 	glUniformMatrix4fv(modelMatrixLocation, 1, 0, glm::value_ptr(transform.getModelMatrix()));
 	glUniform1f(timeLocation, fw::Framework::getTimeSinceStart());
 	glActiveTexture(GL_TEXTURE0);

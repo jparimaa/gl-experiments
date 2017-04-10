@@ -30,7 +30,7 @@ private:
 	fw::CameraController cameraController;
 	fw::Shader shader;
 	fw::Image image;	
-	glm::mat4 mvpMatrix;
+	glm::mat4 modelViewMatrix;
 	fw::Transformation transform;
 
 	unsigned int numIndices = 0;

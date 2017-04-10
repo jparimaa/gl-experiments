@@ -1,6 +1,6 @@
 #version 450 core
 
-layout (binding = 3) uniform sampler2D tex0;
+layout (binding = 4) uniform sampler2D tex0;
 
 in vec2 texGS;
 in vec3 normalWorldGS;

@@ -23,7 +23,7 @@ public:
 private:
 	float FOV = 45.0f;
 	float ratio = 1.33333f;
-	float nearClipDistance = 1.0f;
+	float nearClipDistance = 0.1f;
 	float farClipDistance = 100.0f;
 
 	glm::mat4 viewMatrix;
