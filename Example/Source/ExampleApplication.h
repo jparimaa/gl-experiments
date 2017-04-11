@@ -32,8 +32,7 @@ private:
 	fw::Transformation objTransformation;
 	glm::mat4 mvpMatrix;	
 	GLuint VAO = 0;
-	GLuint vertexBuffer = 0;	
-	GLuint uvBuffer = 0;
+	GLuint vertexBuffer = 0;
 	GLuint indexBuffer = 0;
 	unsigned int numIndices = 0;
 

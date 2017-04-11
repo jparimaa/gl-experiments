@@ -13,7 +13,7 @@ namespace
 
 const GLint mvpMatrixLocation = 0;
 const GLint timeLocation = 1;
-const GLint textureLocation = 2;
+const GLint textureBinding = 2;
 
 } // anonymous
 
@@ -25,7 +25,6 @@ ExampleApplication::~ExampleApplication()
 {
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &vertexBuffer);
-	glDeleteBuffers(1, &uvBuffer);
 	glDeleteBuffers(1, &indexBuffer);
 }
 
@@ -34,6 +33,7 @@ bool ExampleApplication::initialize()
 	fw::printSystemInfo();
 
 	cameraController.setCamera(&camera);
+	cameraController.setResetMode(glm::vec3(0.0f, 0.0f, -3.0f), glm::vec3(0.0f, 3.14f, 0.0f), SDLK_r);
 	
 	std::string path = "Shaders/simple";
 	if (!shader.createProgram({path + ".vert", path + ".frag"})) {
@@ -57,7 +57,7 @@ bool ExampleApplication::initialize()
 
 	createBuffers(model);
 
-	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.3f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
 
 	return true;
@@ -65,11 +65,7 @@ bool ExampleApplication::initialize()
 
 void ExampleApplication::update()
 {
-	if (fw::Input::isKeyDown(SDLK_r)) {
-		fw::Transformation& t = camera.getTransformation();
-		t.position = glm::vec3(0.0f, 0.0f, 3.0f);
-		t.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
-	}
+	fw::toggleRelativeMouseMode();
 
 	cameraController.update();
 
@@ -89,7 +85,7 @@ void ExampleApplication::render()
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, image.getTexture());
-	glUniform1i(textureLocation, 0);
+	glUniform1i(textureBinding, 0);
 
 	glUniform1f(timeLocation, fw::Framework::getTimeSinceStart());
 
@@ -100,34 +96,40 @@ void ExampleApplication::render()
 void ExampleApplication::gui()
 {
 	fw::displayFps();
+	fw::displayVec3("Position %.1f %.1f %.1f", camera.getTransformation().position);
+	fw::displayVec3("Rotation %.1f %.1f %.1f", camera.getTransformation().rotation);
 }
 
 void ExampleApplication::createBuffers(const fw::Model& model)
 {
+	std::vector<float> AOS;
+	std::vector<unsigned int> indices;
+	fw::loadBufferData(model, AOS, indices);
+
+	numIndices = indices.size();
+
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
-	const fw::Model::Mesh mesh = model.getMeshes()[0];
+	std::size_t floatSize = sizeof(float);
+	GLsizei stride = 8 * floatSize;
 
-	GLsizeiptr vertexSize = sizeof(glm::vec3) * mesh.vertices.size();
+	GLsizeiptr bufferSize = floatSize * AOS.size();
 	glGenBuffers(1, &vertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glBufferStorage(GL_ARRAY_BUFFER, vertexSize, &mesh.vertices[0], 0);
+	glBufferStorage(GL_ARRAY_BUFFER, bufferSize, AOS.data(), 0);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, 0);
 	glEnableVertexAttribArray(0);
 
-	GLsizeiptr uvSize = sizeof(glm::vec2) * mesh.uvs.size();
-	glGenBuffers(1, &uvBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
-	glBufferStorage(GL_ARRAY_BUFFER, uvSize, &mesh.uvs[0], 0);
-
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (GLvoid*)(3 * floatSize));
 	glEnableVertexAttribArray(1);
 
-	numIndices = mesh.indices.size();
-	GLsizeiptr indexSize = sizeof(unsigned int) * numIndices;
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (GLvoid*)(5 * floatSize));
+	glEnableVertexAttribArray(2);
+
+	GLsizeiptr indexSize = sizeof(unsigned int) * indices.size();
 	glGenBuffers(1, &indexBuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-	glBufferStorage(GL_ELEMENT_ARRAY_BUFFER, indexSize, &mesh.indices[0], 0);
+	glBufferStorage(GL_ELEMENT_ARRAY_BUFFER, indexSize, indices.data(), 0);
 }
