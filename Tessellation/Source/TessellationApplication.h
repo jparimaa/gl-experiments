@@ -33,5 +33,8 @@ private:
 	GLuint indexBuffer = 0;
 	unsigned int numIndices = 0;
 
+	float tessLevelInner = 1.0f;
+	float tessLevelOuter = 1.0f;
+
 	void createBuffers(const fw::Model& model);
 };

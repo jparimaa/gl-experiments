@@ -1,0 +1,19 @@
+#version 450 core
+
+layout (vertices = 3) out;
+layout (location = 1) uniform float tessLevelInner;
+layout (location = 2) uniform float tessLevelOuter;
+
+in vec3 positionVS[];
+out vec3 positionTCS[];
+
+void main()
+{
+    positionTCS[gl_InvocationID] = positionVS[gl_InvocationID];
+    if (gl_InvocationID == 0) {
+        gl_TessLevelInner[0] = tessLevelInner;
+        gl_TessLevelOuter[0] = tessLevelOuter;
+        gl_TessLevelOuter[1] = tessLevelOuter;
+        gl_TessLevelOuter[2] = tessLevelOuter;
+    }
+}

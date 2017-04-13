@@ -45,6 +45,12 @@ bool Shader::attachShader(const std::string& filename)
 		if (s.find(".frag") != std::string::npos) {
 			return GL_FRAGMENT_SHADER;
 		}
+		if (s.find(".tes") != std::string::npos) {
+			return GL_TESS_EVALUATION_SHADER;
+		}
+		if (s.find(".tcs") != std::string::npos) {
+			return GL_TESS_CONTROL_SHADER;
+		}
 		return 0;
 	};
 
