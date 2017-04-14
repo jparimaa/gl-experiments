@@ -124,23 +124,24 @@ inline void printSystemInfo()
 	std::cout << "GLSL: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n\n";
 }
 
-void inline loadBufferData(const Model& model, std::vector<float>& data, std::vector<unsigned int>& indices)
+void inline mapBufferData(const Model& model, float* vertexData, unsigned int* elementData)
 {
+	unsigned int vertexIndex = 0;
+	unsigned int elementIndex = 0;
 	unsigned int indexOffset = 0;
-
 	for (const auto& mesh : model.getMeshes()) {
 		for (unsigned int i = 0; i < mesh.vertices.size(); ++i) {
-			data.push_back(mesh.vertices[i].x);
-			data.push_back(mesh.vertices[i].y);
-			data.push_back(mesh.vertices[i].z);
-			data.push_back(mesh.uvs[i].x);
-			data.push_back(mesh.uvs[i].y);
-			data.push_back(mesh.normals[i].x);
-			data.push_back(mesh.normals[i].y);
-			data.push_back(mesh.normals[i].z);
+			vertexData[vertexIndex++] = mesh.vertices[i].x;
+			vertexData[vertexIndex++] = mesh.vertices[i].y;
+			vertexData[vertexIndex++] = mesh.vertices[i].z;
+			vertexData[vertexIndex++] = mesh.uvs[i].x;
+			vertexData[vertexIndex++] = mesh.uvs[i].y;
+			vertexData[vertexIndex++] = mesh.normals[i].x;
+			vertexData[vertexIndex++] = mesh.normals[i].y;
+			vertexData[vertexIndex++] = mesh.normals[i].z;
 		}
 		for (const auto& index : mesh.indices) {
-			indices.push_back(index + indexOffset);
+			elementData[elementIndex++] = index + indexOffset;
 		}
 		indexOffset += mesh.vertices.size();
 	}

@@ -4,7 +4,6 @@
 #include <Framework/Camera.h>
 #include <Framework/CameraController.h>
 #include <Framework/Shader.h>
-#include <Framework/Model.h>
 #include <glm/glm.hpp>
 #include <GL/glew.h>
 
@@ -36,5 +35,5 @@ private:
 	float tessLevelInner = 1.0f;
 	float tessLevelOuter = 1.0f;
 
-	void createBuffers(const fw::Model& model);
+	void createBuffers();
 };

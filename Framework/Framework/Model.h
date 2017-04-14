@@ -30,9 +30,13 @@ public:
 
 	bool loadModel(const std::string& file);
 	const Meshes& getMeshes() const;
+	unsigned int getNumVertices() const;
+	unsigned int getNumIndices() const;
 
 private:
 	Meshes meshes;
+	unsigned int numVertices = 0;
+	unsigned int numIndices = 0;
 };
 
 } // fw

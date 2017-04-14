@@ -41,14 +41,7 @@ bool TessellationApplication::initialize()
 	}
 	std::cout << "Loaded shader " << path << " (" << shader.getProgram() << ")\n";
 
-	fw::Model model;
-	std::string modelFile = "../Assets/Models/cube.obj";
-	if (!model.loadModel(modelFile)) {
-		return false;
-	}
-	std::cout << "Loaded model " << modelFile << "\n";
-
-	createBuffers(model);
+	createBuffers();
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
@@ -101,7 +94,7 @@ void TessellationApplication::gui()
 	ImGui::Text("Outer %.0f", tessLevelOuter);
 }
 
-void TessellationApplication::createBuffers(const fw::Model& model)
+void TessellationApplication::createBuffers()
 {
 	std::vector<float> positions{
 		-1.0f, -1.0f,  0.0f,

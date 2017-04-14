@@ -34,13 +34,13 @@ bool ExampleApplication::initialize()
 
 	cameraController.setCamera(&camera);
 	cameraController.setResetMode(glm::vec3(0.0f, 0.0f, -3.0f), glm::vec3(0.0f, 3.14f, 0.0f), SDLK_r);
-	
+
 	std::string path = "Shaders/simple";
 	if (!shader.createProgram({path + ".vert", path + ".frag"})) {
 		return false;
 	}
 	std::cout << "Loaded shader " << path << " (" << shader.getProgram() << ")\n";
-	
+
 	fw::Model model;
 	std::string modelFile = "../Assets/Models/monkey.3ds";
 	if (!model.loadModel(modelFile)) {
@@ -102,34 +102,33 @@ void ExampleApplication::gui()
 
 void ExampleApplication::createBuffers(const fw::Model& model)
 {
-	std::vector<float> AOS;
-	std::vector<unsigned int> indices;
-	fw::loadBufferData(model, AOS, indices);
-
-	numIndices = indices.size();
-
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
 	std::size_t floatSize = sizeof(float);
-	GLsizei stride = 8 * floatSize;
+	GLsizeiptr vertexDataSize = floatSize * 8 * model.getNumVertices();
+	numIndices = model.getNumIndices();
+	GLsizeiptr indexDataSize = sizeof(unsigned int) * numIndices;
 
-	GLsizeiptr bufferSize = floatSize * AOS.size();
 	glGenBuffers(1, &vertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glBufferStorage(GL_ARRAY_BUFFER, bufferSize, AOS.data(), 0);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, 0);
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (GLvoid*)(3 * floatSize));
-	glEnableVertexAttribArray(1);
-
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (GLvoid*)(5 * floatSize));
-	glEnableVertexAttribArray(2);
-
-	GLsizeiptr indexSize = sizeof(unsigned int) * indices.size();
+	glBufferStorage(GL_ARRAY_BUFFER, vertexDataSize, 0, GL_MAP_WRITE_BIT);
+	float* vertexData = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, vertexDataSize, GL_MAP_WRITE_BIT);
+	
 	glGenBuffers(1, &indexBuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-	glBufferStorage(GL_ELEMENT_ARRAY_BUFFER, indexSize, indices.data(), 0);
+	glBufferStorage(GL_ELEMENT_ARRAY_BUFFER, indexDataSize, 0, GL_MAP_WRITE_BIT);
+	unsigned int* elementData = (unsigned int*)glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, indexDataSize, GL_MAP_WRITE_BIT);
+
+	mapBufferData(model, vertexData, elementData);
+	glUnmapBuffer(GL_ARRAY_BUFFER);
+	glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+		
+	GLsizei stride = 8 * floatSize;
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, 0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (GLvoid*)(3 * floatSize));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (GLvoid*)(5 * floatSize));
+	glEnableVertexAttribArray(2);
 }

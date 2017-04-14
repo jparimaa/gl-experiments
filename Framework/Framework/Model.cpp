@@ -18,6 +18,9 @@ Model::~Model()
 
 bool Model::loadModel(const std::string& file)
 {
+	numVertices = 0;
+	numIndices = 0;
+
 	Assimp::Importer importer;
 	unsigned int flags = aiProcess_Triangulate | aiProcess_JoinIdenticalVertices |
 		aiProcess_GenSmoothNormals | aiProcess_GenUVCoords | aiProcess_CalcTangentSpace;
@@ -80,7 +83,9 @@ bool Model::loadModel(const std::string& file)
 				std::cerr << "ERROR: Invalid mesh, 0 vertices\n";
 				return false;
 			}
-			meshes.push_back(std::move(mesh));
+			numVertices += mesh.vertices.size();
+			numIndices += mesh.indices.size();
+			meshes.push_back(std::move(mesh));			
 		}
 	} else {
 		std::cerr << "WARNING: Failed to read model: " << file << "\n";
@@ -98,6 +103,16 @@ bool Model::loadModel(const std::string& file)
 const Model::Meshes& Model::getMeshes() const
 {
 	return meshes;
+}
+
+unsigned int Model::getNumVertices() const
+{
+	return numVertices;
+}
+
+unsigned int Model::getNumIndices() const
+{
+	return numIndices;
 }
 
 } // fw
