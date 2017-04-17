@@ -13,7 +13,6 @@ namespace
 
 const GLint mvpMatrixLocation = 0;
 const GLint timeLocation = 1;
-const GLint textureBinding = 2;
 
 } // anonymous
 
@@ -85,7 +84,6 @@ void ExampleApplication::render()
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, image.getTexture());
-	glUniform1i(textureBinding, 0);
 
 	glUniform1f(timeLocation, fw::Framework::getTimeSinceStart());
 

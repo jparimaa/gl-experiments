@@ -11,7 +11,6 @@
 namespace
 {
 
-const GLint textureLocation = 0;
 const GLint transformationMatricesLocation = 1;
 const GLintptr numPrimitivesMatrixSize = numPrimitives * sizeof(glm::mat4);
 const GLsizeiptr transformationMatricesBufferSize = 2 * numPrimitivesMatrixSize;
@@ -109,7 +108,6 @@ void InstancingApplication::render()
 	
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, image.getTexture());
-	glUniform1i(textureLocation, 0);
 
 	GLintptr matrixSize = numPrimitives * sizeof(glm::mat4);
 	glBindBuffer(GL_UNIFORM_BUFFER, transformationMatricesBuffer);

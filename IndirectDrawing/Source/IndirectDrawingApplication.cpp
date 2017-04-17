@@ -13,7 +13,6 @@
 namespace
 {
 
-const GLint textureLocation = 0;
 const GLuint modelBufferIndex = 0;
 const GLuint mvpBufferIndex = 1;
 const GLuint indexToMatrixBufferIndex = 2;
@@ -122,7 +121,6 @@ void IndirectDrawingApplication::render()
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, image.getTexture());
-	glUniform1i(textureLocation, 0);
 
 	GLbitfield access = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
 

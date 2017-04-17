@@ -13,7 +13,6 @@ const GLuint projectionMatrixLocation = 0;
 const GLuint modelViewMatrixLocation = 1;
 const GLuint modelMatrixLocation = 2;
 const GLuint timeLocation = 3;
-const GLuint textureBinding = 4;
 
 }
 
@@ -82,8 +81,7 @@ void GeometryShaderApplication::render()
 	glUniformMatrix4fv(modelMatrixLocation, 1, 0, glm::value_ptr(transform.getModelMatrix()));
 	glUniform1f(timeLocation, fw::Framework::getTimeSinceStart());
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, image.getTexture());	
-	glUniform1i(textureBinding, 0);	
+	glBindTexture(GL_TEXTURE_2D, image.getTexture());
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
 }

@@ -1,7 +1,7 @@
 #version 450 core
 
 layout (location = 1) uniform float time;
-layout (binding = 2) uniform sampler2D tex0;
+layout (binding = 0) uniform sampler2D tex0;
 
 in vec2 texCoord;
 

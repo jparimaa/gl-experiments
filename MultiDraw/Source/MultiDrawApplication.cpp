@@ -12,7 +12,6 @@ namespace
 
 const GLint mvpMatrixLocation = 0;
 const GLint timeLocation = 1;
-const GLint textureLocation = 2;
 
 } // anonymous
 
@@ -100,7 +99,6 @@ void MultiDrawApplication::render()
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, image.getTexture());
-	glUniform1i(textureLocation, 0);
 
 	if (renderMultiBuffer) {
 		glBindVertexArray(multi.VAO);
