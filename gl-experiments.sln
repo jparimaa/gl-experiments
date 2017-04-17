@@ -27,6 +27,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GeometryShader", "GeometryS
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tessellation", "Tessellation\Tessellation.vcxproj", "{497C1E1C-7112-4FE3-AC38-FA00B2660D87}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VertexPulling", "VertexPulling\VertexPulling.vcxproj", "{764FDE4F-8501-4A03-B995-16B2F8D11525}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -131,6 +133,14 @@ Global
 		{497C1E1C-7112-4FE3-AC38-FA00B2660D87}.Release|x64.Build.0 = Release|x64
 		{497C1E1C-7112-4FE3-AC38-FA00B2660D87}.Release|x86.ActiveCfg = Release|Win32
 		{497C1E1C-7112-4FE3-AC38-FA00B2660D87}.Release|x86.Build.0 = Release|Win32
+		{764FDE4F-8501-4A03-B995-16B2F8D11525}.Debug|x64.ActiveCfg = Debug|x64
+		{764FDE4F-8501-4A03-B995-16B2F8D11525}.Debug|x64.Build.0 = Debug|x64
+		{764FDE4F-8501-4A03-B995-16B2F8D11525}.Debug|x86.ActiveCfg = Debug|Win32
+		{764FDE4F-8501-4A03-B995-16B2F8D11525}.Debug|x86.Build.0 = Debug|Win32
+		{764FDE4F-8501-4A03-B995-16B2F8D11525}.Release|x64.ActiveCfg = Release|x64
+		{764FDE4F-8501-4A03-B995-16B2F8D11525}.Release|x64.Build.0 = Release|x64
+		{764FDE4F-8501-4A03-B995-16B2F8D11525}.Release|x86.ActiveCfg = Release|Win32
+		{764FDE4F-8501-4A03-B995-16B2F8D11525}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
