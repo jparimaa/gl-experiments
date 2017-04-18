@@ -1,5 +1,4 @@
 #version 450 core
-
 layout (binding = 0) uniform sampler2D tex0;
 
 in vec2 texCoord;

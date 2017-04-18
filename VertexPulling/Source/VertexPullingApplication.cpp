@@ -23,8 +23,11 @@ VertexPullingApplication::VertexPullingApplication()
 VertexPullingApplication::~VertexPullingApplication()
 {
 	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &vertexBuffer);
+	glDeleteBuffers(1, &vnBuffer);
+	glDeleteBuffers(1, &uvBuffer);
 	glDeleteBuffers(1, &indexBuffer);
+	glDeleteTextures(1, &vnTexBuffer);
+	glDeleteTextures(1, &uvTexBuffer);
 }
 
 bool VertexPullingApplication::initialize()
@@ -85,6 +88,10 @@ void VertexPullingApplication::render()
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, image.getTexture());
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_BUFFER, vnTexBuffer);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_BUFFER, uvTexBuffer);
 
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
@@ -99,33 +106,52 @@ void VertexPullingApplication::gui()
 
 void VertexPullingApplication::createBuffers(const fw::Model& model)
 {
+	std::vector<float> vertexAndNormal;
+	std::vector<float> uv;
+	std::vector <unsigned int> indices;
+	unsigned int indexOffset = 0;
+	for (const auto& mesh : model.getMeshes()) {
+		for (unsigned int i = 0; i < mesh.vertices.size(); ++i) {
+			vertexAndNormal.push_back(mesh.vertices[i].x);
+			vertexAndNormal.push_back(mesh.vertices[i].y);
+			vertexAndNormal.push_back(mesh.vertices[i].z);
+			vertexAndNormal.push_back(mesh.normals[i].x);
+			vertexAndNormal.push_back(mesh.normals[i].y);
+			vertexAndNormal.push_back(mesh.normals[i].z);
+			uv.push_back(mesh.uvs[i].x);
+			uv.push_back(mesh.uvs[i].y);
+		}
+		for (const auto& index : mesh.indices) {
+			indices.push_back(index + indexOffset);
+		}
+		indexOffset += mesh.vertices.size();
+	}
+
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
-	std::size_t floatSize = sizeof(float);
-	GLsizeiptr vertexDataSize = floatSize * 8 * model.getNumVertices();
+	GLsizeiptr vertexDataSize = sizeof(float) * 6 * model.getNumVertices();
+	glGenBuffers(1, &vnBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vnBuffer);
+	glBufferStorage(GL_ARRAY_BUFFER, vertexDataSize, vertexAndNormal.data(), 0);
+
+	GLsizeiptr uvDataSize = sizeof(float) * 3 * model.getNumVertices();
+	glGenBuffers(1, &uvBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
+	glBufferStorage(GL_ARRAY_BUFFER, uvDataSize, uv.data(), 0);
+
 	numIndices = model.getNumIndices();
 	GLsizeiptr indexDataSize = sizeof(unsigned int) * numIndices;
-
-	glGenBuffers(1, &vertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glBufferStorage(GL_ARRAY_BUFFER, vertexDataSize, 0, GL_MAP_WRITE_BIT);
-	float* vertexData = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, vertexDataSize, GL_MAP_WRITE_BIT);
-	
 	glGenBuffers(1, &indexBuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-	glBufferStorage(GL_ELEMENT_ARRAY_BUFFER, indexDataSize, 0, GL_MAP_WRITE_BIT);
-	unsigned int* elementData = (unsigned int*)glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, indexDataSize, GL_MAP_WRITE_BIT);
+	glBufferStorage(GL_ELEMENT_ARRAY_BUFFER, indexDataSize, indices.data(), 0);
+	
+	glGenTextures(1, &vnTexBuffer);
+	glBindTexture(GL_TEXTURE_BUFFER, vnTexBuffer);
+	glTexBuffer(GL_TEXTURE_BUFFER, GL_RGB32F, vnBuffer);
 
-	mapBufferData(model, vertexData, elementData);
-	glUnmapBuffer(GL_ARRAY_BUFFER);
-	glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-		
-	GLsizei stride = 8 * floatSize;
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, 0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (GLvoid*)(3 * floatSize));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (GLvoid*)(5 * floatSize));
-	glEnableVertexAttribArray(2);
+	glGenTextures(1, &uvTexBuffer);
+	glBindTexture(GL_TEXTURE_BUFFER, uvTexBuffer);
+	glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, uvBuffer);
+	// Could also add indices to tex buffer and render with drawArrays and fetch the index with vertexID
 }

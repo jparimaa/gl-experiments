@@ -32,9 +32,12 @@ private:
 	fw::Transformation objTransformation;
 	glm::mat4 mvpMatrix;	
 	GLuint VAO = 0;
-	GLuint vertexBuffer = 0;
+	GLuint vnBuffer = 0; // Vertex & normal
+	GLuint uvBuffer = 0;
 	GLuint indexBuffer = 0;
 	unsigned int numIndices = 0;
+	GLuint vnTexBuffer = 0;
+	GLuint uvTexBuffer = 0;
 
 	void createBuffers(const fw::Model& model);
 };
