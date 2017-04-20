@@ -30,11 +30,16 @@ private:
 	fw::Shader shader;
 	fw::Image image;
 	fw::Transformation objTransformation;
-	glm::mat4 mvpMatrix;	
+	glm::mat4 mvpMatrix;
+	GLuint texture = 0;
+	GLuint sampler = 0;
 	GLuint VAO = 0;
 	GLuint vertexBuffer = 0;
 	GLuint indexBuffer = 0;
+	GLuint uniformBuffer = 0;
 	unsigned int numIndices = 0;
 
-	void createBuffers(const fw::Model& model);
+	void createTexture(const fw::Image& image);
+	void createSampler();
+	void createBuffers(const fw::Model& model);	
 };

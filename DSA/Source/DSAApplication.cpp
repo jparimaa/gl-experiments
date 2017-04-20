@@ -11,8 +11,16 @@
 namespace
 {
 
-const GLint modelMatrixLocation = 0;
-const GLint mvpMatrixLocation = 1;
+const GLuint vertexBufferBindingIndex = 0;
+const GLuint positionAttribute = 0;
+const GLuint uvAttribute = 1;
+const GLuint normalAttribute = 2;
+const GLint uniformBufferBinding = 0;
+const GLint textureBinding = 1;
+const GLint timeLocation = 0;
+const GLsizeiptr matrixBufferSize = 2 * sizeof(glm::mat4);
+GLfloat clearColor[4] = {0.0f, 0.0f, 0.3f, 0.0f};
+GLfloat clearDepth = 1.0f;
 
 } // anonymous
 
@@ -22,9 +30,12 @@ DSAApplication::DSAApplication()
 
 DSAApplication::~DSAApplication()
 {
+	glDeleteTextures(1, &texture);
+	glDeleteSamplers(1, &sampler);
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &vertexBuffer);	
 	glDeleteBuffers(1, &indexBuffer);
+	glDeleteBuffers(1, &uniformBuffer);
 }
 
 bool DSAApplication::initialize()
@@ -51,12 +62,12 @@ bool DSAApplication::initialize()
 	if (!image.load(textureFile)) {
 		return false;
 	}
-	image.create2dTexture();
-	std::cout << "Loaded texture " << textureFile << " (" << image.getTexture() << ")\n";
-
+	std::cout << "Loaded image " << textureFile << "\n";
+	
+	createTexture(image);
+	createSampler();
 	createBuffers(model);
 
-	glClearColor(0.0f, 0.0f, 0.3f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
 
 	return true;
@@ -70,21 +81,27 @@ void DSAApplication::update()
 
 	objTransformation.rotate(glm::vec3(0.0f, 1.0f, 0.0f), fw::Framework::getFrameTime() * 0.7f);
 	objTransformation.updateModelMatrix();
-
+	 
 	const glm::mat4& viewMatrix = camera.updateViewMatrix();
 	mvpMatrix = camera.getProjectionMatrix() * viewMatrix * objTransformation.getModelMatrix();
 }
 
 void DSAApplication::render()
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearNamedFramebufferfv(0, GL_COLOR, 0, clearColor);
+	glClearNamedFramebufferfv(0, GL_DEPTH, 0, &clearDepth);
 	glUseProgram(shader.getProgram());
 
-	glUniformMatrix4fv(modelMatrixLocation, 1, 0, glm::value_ptr(objTransformation.getModelMatrix()));
-	glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(mvpMatrix));
+	glm::mat4* data = (glm::mat4*)glMapNamedBufferRange(uniformBuffer, 0, matrixBufferSize, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+	data[0] = objTransformation.getModelMatrix();
+	data[1] = mvpMatrix;
+	glUnmapNamedBuffer(uniformBuffer);
+	glBindBufferRange(GL_UNIFORM_BUFFER, uniformBufferBinding, uniformBuffer, 0, matrixBufferSize);
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, image.getTexture());
+	glProgramUniform1f(shader.getProgram(), timeLocation, fw::Framework::getTimeSinceStart());
+		
+	glBindSamplers(textureBinding, 1, &sampler);
+	glBindTextureUnit(textureBinding, texture);
 
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
@@ -97,35 +114,74 @@ void DSAApplication::gui()
 	fw::displayVec3("Rotation %.1f %.1f %.1f", camera.getTransformation().rotation);
 }
 
+void DSAApplication::createTexture(const fw::Image& image)
+{
+	glCreateTextures(GL_TEXTURE_2D, 1, &texture);
+	GLsizei numMipmaps = static_cast<GLsizei>(std::floor(log2(static_cast<double>(std::max(image.getWidth(), image.getHeight())))));
+	glTextureStorage2D(texture, numMipmaps, GL_RGBA8, image.getWidth(), image.getHeight());
+	glTextureSubImage2D(texture, 0, 0, 0, image.getWidth(), image.getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, image.getData());
+	glGenerateTextureMipmap(texture);
+}
+
+void DSAApplication::createSampler()
+{
+	glCreateSamplers(1, &sampler);
+	glSamplerParameteri(sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glSamplerParameteri(sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glSamplerParameteri(sampler, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glSamplerParameteri(sampler, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glSamplerParameteri(sampler, GL_TEXTURE_WRAP_R, GL_REPEAT);
+}
+
 void DSAApplication::createBuffers(const fw::Model& model)
 {
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
+	std::vector<float> vertexData;
+	std::vector <unsigned int> indices;
+	unsigned int indexOffset = 0;
+	for (const auto& mesh : model.getMeshes()) {
+		for (unsigned int i = 0; i < mesh.vertices.size(); ++i) {
+			vertexData.push_back(mesh.vertices[i].x);
+			vertexData.push_back(mesh.vertices[i].y);
+			vertexData.push_back(mesh.vertices[i].z);
+			vertexData.push_back(mesh.uvs[i].x);
+			vertexData.push_back(mesh.uvs[i].y);
+			vertexData.push_back(mesh.normals[i].x);
+			vertexData.push_back(mesh.normals[i].y);
+			vertexData.push_back(mesh.normals[i].z);
+		}
+		for (const auto& index : mesh.indices) {
+			indices.push_back(index + indexOffset);
+		}
+		indexOffset += mesh.vertices.size();
+	}
 
-	std::size_t floatSize = sizeof(float);
-	GLsizeiptr vertexDataSize = floatSize * 8 * model.getNumVertices();
+	glCreateBuffers(1, &vertexBuffer);
+	GLsizeiptr vertexDataSize = sizeof(float) * 8 * model.getNumVertices();
+	glNamedBufferStorage(vertexBuffer, vertexDataSize, vertexData.data(), 0);
+		
+	glCreateBuffers(1, &indexBuffer);
 	numIndices = model.getNumIndices();
 	GLsizeiptr indexDataSize = sizeof(unsigned int) * numIndices;
+	glNamedBufferStorage(indexBuffer, indexDataSize, indices.data(), 0);
 
-	glGenBuffers(1, &vertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glBufferStorage(GL_ARRAY_BUFFER, vertexDataSize, 0, GL_MAP_WRITE_BIT);
-	float* vertexData = (float*)glMapBufferRange(GL_ARRAY_BUFFER, 0, vertexDataSize, GL_MAP_WRITE_BIT);
+	glCreateBuffers(1, &uniformBuffer);
+	glNamedBufferStorage(uniformBuffer, matrixBufferSize, nullptr, GL_MAP_WRITE_BIT);
 
-	glGenBuffers(1, &indexBuffer);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-	glBufferStorage(GL_ELEMENT_ARRAY_BUFFER, indexDataSize, 0, GL_MAP_WRITE_BIT);
-	unsigned int* elementData = (unsigned int*)glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, indexDataSize, GL_MAP_WRITE_BIT);
+	glCreateVertexArrays(1, &VAO);
+		
+	glVertexArrayAttribBinding(VAO, positionAttribute, vertexBufferBindingIndex);
+	glVertexArrayAttribFormat(VAO, positionAttribute, 3, GL_FLOAT, GL_FALSE, 0);
+	glEnableVertexArrayAttrib(VAO, positionAttribute);
 
-	mapBufferData(model, vertexData, elementData);
-	glUnmapBuffer(GL_ARRAY_BUFFER);
-	glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+	glVertexArrayAttribBinding(VAO, uvAttribute, vertexBufferBindingIndex);
+	glVertexArrayAttribFormat(VAO, uvAttribute, 2, GL_FLOAT, GL_FALSE, (GLuint)(3 * sizeof(float)));
+	glEnableVertexArrayAttrib(VAO, uvAttribute);
 
-	GLsizei stride = 8 * floatSize;
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, 0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (GLvoid*)(3 * floatSize));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (GLvoid*)(5 * floatSize));
-	glEnableVertexAttribArray(2);
+	glVertexArrayAttribBinding(VAO, normalAttribute, vertexBufferBindingIndex);
+	glVertexArrayAttribFormat(VAO, normalAttribute, 3, GL_FLOAT, GL_FALSE, (GLuint)(5 * sizeof(float)));
+	glEnableVertexArrayAttrib(VAO, normalAttribute);
+
+	glVertexArrayVertexBuffer(VAO, vertexBufferBindingIndex, vertexBuffer, 0, (GLuint)(8 * sizeof(float)));
+	glVertexArrayElementBuffer(VAO, indexBuffer);
 }
+

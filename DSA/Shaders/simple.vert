@@ -3,8 +3,11 @@ layout (location = 0) in vec3 position;
 layout (location = 1) in vec2 tex;
 layout (location = 2) in vec3 normal;
 
-layout (location = 0) uniform mat4 M;
-layout (location = 1) uniform mat4 MVP;
+layout(binding = 0) uniform transform
+{
+	mat4 M;
+	mat4 MVP;
+};
 
 out vec2 texCoord;
 out vec3 normal_World;
