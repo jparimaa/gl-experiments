@@ -7,6 +7,7 @@ endif()
 
 set(SDL2_PATH CACHE PATH "Path to SDL2")
 set(ASSIMP_PATH CACHE PATH "Path to assimp")
+set(GLEW_PATH CACHE PATH "Path to GLEW")
 
 set(STB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/External/stb/")
 set(GLM_PATH "${CMAKE_CURRENT_SOURCE_DIR}/External/glm/")
@@ -22,13 +23,13 @@ function(ADD_PROJECT_WITH_DEFAULT_SETTINGS PROJECT_NAME)
 
     target_link_libraries(${PROJECT_NAME}
         PRIVATE
-            framework
+            Framework
     )
 
     target_include_directories(${PROJECT_NAME}
         PRIVATE
             "${CMAKE_CURRENT_SOURCE_DIR}/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../../Framework/"
+            "${CMAKE_CURRENT_SOURCE_DIR}/../../Framework/include/"
     )
 
     if(MSVC)
@@ -49,6 +50,7 @@ endfunction()
 
 add_subdirectory(Framework)
 add_subdirectory(Experiments/Example)
+
 # add_subdirectory(Examples/PBR)
 # add_subdirectory(Examples/Subpass)
 # add_subdirectory(Examples/SecondaryCommandBuffer)

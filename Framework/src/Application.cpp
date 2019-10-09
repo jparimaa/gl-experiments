@@ -1,8 +1,7 @@
-#include "Application.h"
+#include "fw/Application.h"
 
 namespace fw
 {
-
 Application::Application()
 {
 }
@@ -10,5 +9,4 @@ Application::Application()
 Application::~Application()
 {
 }
-
-} // fw
+} // namespace fw
