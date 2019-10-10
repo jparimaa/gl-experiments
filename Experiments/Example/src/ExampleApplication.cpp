@@ -35,7 +35,7 @@ bool ExampleApplication::initialize()
     cameraController.setCamera(&camera);
     cameraController.setResetMode(glm::vec3(0.0f, 0.0f, -3.0f), glm::vec3(0.0f, 3.14f, 0.0f), SDLK_r);
 
-    std::string path = "Shaders/simple";
+    std::string path = std::string(ROOT_PATH) + "Experiments/Example/shaders/simple";
     if (!shader.createProgram({path + ".vert", path + ".frag"}))
     {
         return false;
@@ -43,14 +43,14 @@ bool ExampleApplication::initialize()
     std::cout << "Loaded shader " << path << " (" << shader.getProgram() << ")\n";
 
     fw::Model model;
-    std::string modelFile = "../Assets/Models/monkey.3ds";
+    std::string modelFile = std::string(ASSETS_PATH) + "Models/monkey.3ds";
     if (!model.loadModel(modelFile))
     {
         return false;
     }
     std::cout << "Loaded model " << modelFile << "\n";
 
-    std::string textureFile = "../Assets/Textures/checker.png";
+    std::string textureFile = std::string(ASSETS_PATH) + "Textures/checker.png";
     if (!image.load(textureFile))
     {
         return false;

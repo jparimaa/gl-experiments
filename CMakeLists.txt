@@ -12,7 +12,10 @@ set(GLEW_PATH CACHE PATH "Path to GLEW")
 set(STB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/External/stb/")
 set(GLM_PATH "${CMAKE_CURRENT_SOURCE_DIR}/External/glm/")
 
-add_definitions(-DASSETS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/Assets/")
+add_definitions(
+    -DASSETS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/Assets/"
+    -DROOT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/"
+)
 
 function(ADD_PROJECT_WITH_DEFAULT_SETTINGS PROJECT_NAME)
     file(GLOB SOURCES 
@@ -44,6 +47,18 @@ function(ADD_PROJECT_WITH_DEFAULT_SETTINGS PROJECT_NAME)
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 "${ASSIMP_PATH}/bin/x64/assimp-vc140-mt.dll"
                 $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        )
+
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${SDL2_PATH}/lib/x64/SDL2.dll"
+            $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        )
+
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${GLEW_PATH}/bin/Release/x64/glew32.dll"
+            $<TARGET_FILE_DIR:${PROJECT_NAME}>
         )
     endif()
 endfunction()

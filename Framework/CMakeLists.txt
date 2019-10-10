@@ -18,9 +18,10 @@ if (WIN32)
     target_link_libraries(Framework
         PUBLIC
             "${ASSIMP_PATH}/lib/x64/assimp-vc140-mt.lib"
+            "${GLEW_PATH}/lib/Release/x64/glew32.lib"
             "${SDL2_PATH}/lib/x64/SDL2.lib"
             "${SDL2_PATH}/lib/x64/SDL2main.lib"
-            "${GLEW_PATH}/lib/Release/x64/glew32s.lib"
+            "opengl32"
     )
 endif()
 
