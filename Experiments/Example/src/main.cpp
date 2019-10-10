@@ -1,7 +1,8 @@
 #include "ExampleApplication.h"
-#include <Framework/Common.h>
 
-#define CHECK_MEMORY_LEAKS
+#include <fw/Common.h>
+
+//#define CHECK_MEMORY_LEAKS
 #ifdef CHECK_MEMORY_LEAKS
 #include <vld.h>
 #endif
@@ -12,5 +13,5 @@
 
 int main(int /*argc*/, char* /*argv[]*/)
 {
-	return fw::executeGenericMain<ExampleApplication>();
+    return fw::executeGenericMain<ExampleApplication>();
 }
