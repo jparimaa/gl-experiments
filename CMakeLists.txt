@@ -20,7 +20,7 @@ add_definitions(
 function(ADD_PROJECT_WITH_DEFAULT_SETTINGS PROJECT_NAME)
     file(GLOB SOURCES 
         ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp 
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)
 
     add_executable(${PROJECT_NAME} ${SOURCES})
 
@@ -31,7 +31,7 @@ function(ADD_PROJECT_WITH_DEFAULT_SETTINGS PROJECT_NAME)
 
     target_include_directories(${PROJECT_NAME}
         PRIVATE
-            "${CMAKE_CURRENT_SOURCE_DIR}/include"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src"
             "${CMAKE_CURRENT_SOURCE_DIR}/../../Framework/include/"
     )
 
@@ -65,17 +65,15 @@ endfunction()
 
 add_subdirectory(Framework)
 add_subdirectory(Experiments/Example)
-
-# add_subdirectory(Examples/PBR)
-# add_subdirectory(Examples/Subpass)
-# add_subdirectory(Examples/SecondaryCommandBuffer)
-# add_subdirectory(Examples/DynamicUniformBuffer)
-# add_subdirectory(Examples/PushConstant)
-# add_subdirectory(Examples/SpecializationConstant)
-# add_subdirectory(Examples/Triangle)
-# add_subdirectory(Examples/LightShaft)
-# add_subdirectory(Examples/Reflection)
-# add_subdirectory(Examples/Multisampling)
-# add_subdirectory(Examples/Mandelbrot)
-# add_subdirectory(Examples/Particles)
-# add_subdirectory(Examples/Clustered)
+add_subdirectory(Experiments/BindlessTexture)
+add_subdirectory(Experiments/DSA)
+add_subdirectory(Experiments/GeometryShader)
+add_subdirectory(Experiments/ImageLoadStore)
+add_subdirectory(Experiments/IndirectDrawing)
+add_subdirectory(Experiments/IndirectDrawingSimple)
+add_subdirectory(Experiments/Instancing)
+add_subdirectory(Experiments/MultiDraw)
+add_subdirectory(Experiments/Tessellation)
+add_subdirectory(Experiments/TextureArray)
+add_subdirectory(Experiments/TransformFeedback)
+add_subdirectory(Experiments/VertexPulling)

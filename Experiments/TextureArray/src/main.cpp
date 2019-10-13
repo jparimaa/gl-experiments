@@ -1,5 +1,4 @@
-#include "ExampleApplication.h"
-
+#include "TextureArrayApplication.h"
 #include <fw/Common.h>
 
 #ifdef _WIN32
@@ -8,5 +7,5 @@
 
 int main(int /*argc*/, char* /*argv[]*/)
 {
-    return fw::executeGenericMain<ExampleApplication>();
+    return fw::executeGenericMain<TextureArrayApplication>();
 }
