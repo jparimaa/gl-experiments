@@ -11,5 +11,5 @@ Experimenting with OpenGL features and implementing simple examples of real-time
 - GLEW 2.0.0
 - GLM 0.9.8.4
 - SDL2 2.0.5
-- SOIL July 7, 2008
+- stb image
 - dear imgui aka ImGui 6384eee
