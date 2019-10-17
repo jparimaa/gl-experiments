@@ -14,7 +14,7 @@
 namespace
 {
 const GLint mvpMatrixLocation = 0;
-const GLint timeLocation = 1;
+const GLint projectorMatrixLocation = 1;
 } // namespace
 
 TextureProjectionApplication::TextureProjectionApplication()
@@ -38,14 +38,6 @@ bool TextureProjectionApplication::initialize()
         return false;
     }
     std::cout << "Loaded shader " << path << " (" << shader.getProgram() << ")\n";
-
-    fw::Model monkeyModel;
-    std::string monkeyModelFile = std::string(ASSETS_PATH) + "Models/monkey.3ds";
-    if (!monkeyModel.loadModel(monkeyModelFile))
-    {
-        return false;
-    }
-    std::cout << "Loaded model " << monkeyModelFile << "\n";
 
     fw::Model cubeModel;
     std::string cubeModelFile = std::string(ASSETS_PATH) + "Models/cube.obj";
@@ -71,7 +63,7 @@ bool TextureProjectionApplication::initialize()
     greyImage.create2dTexture();
     std::cout << "Loaded texture " << greyTextureFile << " (" << greyImage.getTexture() << ")\n";
 
-    std::string projectionTextureFile = std::string(ASSETS_PATH) + "Textures/kili.jpg";
+    std::string projectionTextureFile = std::string(ASSETS_PATH) + "Textures/smile.jpg";
     if (!projectionImage.load(projectionTextureFile))
     {
         return false;
@@ -79,34 +71,47 @@ bool TextureProjectionApplication::initialize()
     projectionImage.create2dTexture();
     std::cout << "Loaded texture " << projectionTextureFile << " (" << projectionImage.getTexture() << ")\n";
 
-    createBuffers(monkeyModel, monkey);
     createBuffers(cubeModel, cube);
 
     glClearColor(0.0f, 0.0f, 0.3f, 1.0f);
     glEnable(GL_DEPTH_TEST);
 
-    cube.objTransformation.position = glm::vec3(0.0f, -1.0f, 0.0f);
-    cube.objTransformation.scale = glm::vec3(3.0f, 0.1f, 3.0f);
-    cube.objTransformation.updateModelMatrix();
+    floorTrans.objTransformation.position = glm::vec3(0.0f, -0.5f, 0.0f);
+    floorTrans.objTransformation.scale = glm::vec3(3.0f, 0.1f, 3.0f);
+    floorTrans.objTransformation.updateModelMatrix();
 
     camera.getTransformation().position = glm::vec3(0.0f, 1.0f, 5.0f);
     camera.getTransformation().rotation = glm::vec3(-0.2f, 0.0f, 0.0f);
+
+    projector.getTransformation().position = glm::vec3(5.0f, 5.0f, 5.0f);
+    projector.getTransformation().rotation = glm::vec3(-0.67f, 0.77f, 0.0f);
+    projector.updateViewMatrix();
 
     return true;
 }
 
 void TextureProjectionApplication::update()
 {
+    if (fw::Input::isKeyPressed(SDLK_p))
+    {
+        camera.getTransformation().position = projector.getTransformation().position;
+        camera.getTransformation().rotation = projector.getTransformation().rotation;
+    }
+
     fw::toggleRelativeMouseMode();
 
     cameraController.update();
 
-    monkey.objTransformation.rotate(glm::vec3(0.0f, 1.0f, 0.0f), fw::Framework::getFrameTime() * 0.7f);
-    monkey.objTransformation.updateModelMatrix();
+    cubeTrans.objTransformation.rotate(glm::vec3(0.0f, 1.0f, 0.0f), fw::Framework::getFrameTime() * 0.7f);
+    cubeTrans.objTransformation.updateModelMatrix();
 
-    glm::mat4 viewMatrix = camera.updateViewMatrix();
-    monkey.mvpMatrix = camera.getProjectionMatrix() * viewMatrix * monkey.objTransformation.getModelMatrix();
-    cube.mvpMatrix = camera.getProjectionMatrix() * viewMatrix * cube.objTransformation.getModelMatrix();
+    camera.updateViewMatrix();
+
+    cubeTrans.mvpMatrix = camera.getProjectionMatrix() * camera.getViewMatrix() * cubeTrans.objTransformation.getModelMatrix();
+    floorTrans.mvpMatrix = camera.getProjectionMatrix() * camera.getViewMatrix() * floorTrans.objTransformation.getModelMatrix();
+
+    cubeTrans.projectionMatrix = projector.getProjectionMatrix() * projector.getViewMatrix() * cubeTrans.objTransformation.getModelMatrix();
+    floorTrans.projectionMatrix = projector.getProjectionMatrix() * projector.getViewMatrix() * floorTrans.objTransformation.getModelMatrix();
 }
 
 void TextureProjectionApplication::render()
@@ -114,18 +119,31 @@ void TextureProjectionApplication::render()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(shader.getProgram());
 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+    glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(cubeTrans.mvpMatrix));
+    glUniformMatrix4fv(projectorMatrixLocation, 1, 0, glm::value_ptr(cubeTrans.projectionMatrix));
+
+    // Cube
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, greyImage.getTexture());
 
-    glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(monkey.mvpMatrix));
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, projectionImage.getTexture());
 
-    glBindVertexArray(monkey.VAO);
-    glDrawElements(GL_TRIANGLES, monkey.numIndices, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(cube.VAO);
+    glDrawElements(GL_TRIANGLES, cube.numIndices, GL_UNSIGNED_INT, 0);
 
+    // Floor
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, checkerImage.getTexture());
 
-    glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(cube.mvpMatrix));
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, projectionImage.getTexture());
+
+    glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(floorTrans.mvpMatrix));
+    glUniformMatrix4fv(projectorMatrixLocation, 1, 0, glm::value_ptr(floorTrans.projectionMatrix));
 
     glBindVertexArray(cube.VAO);
     glDrawElements(GL_TRIANGLES, cube.numIndices, GL_UNSIGNED_INT, 0);
@@ -133,9 +151,6 @@ void TextureProjectionApplication::render()
 
 void TextureProjectionApplication::gui()
 {
-    fw::displayFps();
-    fw::displayVec3("Position %.1f %.1f %.1f", camera.getTransformation().position);
-    fw::displayVec3("Rotation %.1f %.1f %.1f", camera.getTransformation().rotation);
 }
 
 void TextureProjectionApplication::createBuffers(const fw::Model& model, RenderObject& renderObject)

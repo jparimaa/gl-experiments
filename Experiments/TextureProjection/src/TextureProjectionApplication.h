@@ -29,23 +29,30 @@ private:
     {
         ~RenderObject();
 
-        fw::Transformation objTransformation;
-        glm::mat4 mvpMatrix;
         GLuint VAO = 0;
         GLuint vertexBuffer = 0;
         GLuint indexBuffer = 0;
         unsigned int numIndices = 0;
     };
 
+    struct ObjectTransform
+    {
+        fw::Transformation objTransformation;
+        glm::mat4 mvpMatrix;
+        glm::mat4 projectionMatrix;
+    };
+
     fw::Camera camera;
+    fw::Camera projector;
     fw::CameraController cameraController;
     fw::Shader shader;
     fw::Image checkerImage;
     fw::Image greyImage;
     fw::Image projectionImage;
 
-    RenderObject monkey;
     RenderObject cube;
+    ObjectTransform cubeTrans;
+    ObjectTransform floorTrans;
 
     void createBuffers(const fw::Model& model, RenderObject& renderObject);
 };

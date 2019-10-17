@@ -21,7 +21,7 @@ Image::~Image()
 bool Image::load(const std::string& file)
 {
     clearData();
-
+    stbi_set_flip_vertically_on_load(true);
     data = stbi_load(file.c_str(), &width, &height, &channels, 4);
     if (!data)
     {
