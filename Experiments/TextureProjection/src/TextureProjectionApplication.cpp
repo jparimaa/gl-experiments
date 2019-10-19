@@ -83,7 +83,8 @@ bool TextureProjectionApplication::initialize()
     camera.getTransformation().position = glm::vec3(0.0f, 1.0f, 5.0f);
     camera.getTransformation().rotation = glm::vec3(-0.2f, 0.0f, 0.0f);
 
-    projector.getTransformation().position = glm::vec3(5.0f, 5.0f, 5.0f);
+    projector.setAspectRatio(1.0f);
+    projector.getTransformation().position = glm::vec3(3.0f, 3.0f, 3.0f);
     projector.getTransformation().rotation = glm::vec3(-0.67f, 0.77f, 0.0f);
     projector.updateViewMatrix();
 

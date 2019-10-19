@@ -42,4 +42,10 @@ Transformation& Camera::getTransformation()
 {
     return transformation;
 }
+
+void Camera::setAspectRatio(float aspectRatio)
+{
+    ratio = aspectRatio;
+    updateProjectionMatrix();
+}
 } // namespace fw

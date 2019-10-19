@@ -19,6 +19,8 @@ public:
 
     Transformation& getTransformation();
 
+    void setAspectRatio(float aspectRatio);
+
 private:
     float FOV = 45.0f;
     float ratio = 1.33333f;
