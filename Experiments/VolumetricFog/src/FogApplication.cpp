@@ -14,7 +14,10 @@
 namespace
 {
 const GLint mvpMatrixLocation = 0;
-const GLint timeLocation = 1;
+const GLint modelMatrixLocation = 1;
+const GLint lightPositionsLocation = 10;
+const GLint lightColorsLocation = 14;
+const GLsizei numLights = 4;
 } // namespace
 
 FogApplication::FogApplication()
@@ -37,7 +40,7 @@ bool FogApplication::initialize()
     cameraController.setCamera(&camera);
     cameraController.setResetMode(p, glm::vec3(0.0f, 0.0f, 0.0f), SDLK_r);
 
-    std::string path = std::string(ROOT_PATH) + "Experiments/Example/shaders/simple";
+    std::string path = std::string(ROOT_PATH) + "Experiments/VolumetricFog/shaders/simple";
     if (!shader.createProgram({path + ".vert", path + ".frag"}))
     {
         return false;
@@ -79,7 +82,7 @@ void FogApplication::update()
 
     for (RenderObject& ro : renderObjects)
     {
-        ro.mvp = camera.getProjectionMatrix() * viewMatrix * ro.transform.getModelMatrix();
+        ro.mvpMatrix = camera.getProjectionMatrix() * viewMatrix * ro.transform.getModelMatrix();
     }
 }
 
@@ -91,12 +94,14 @@ void FogApplication::render()
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, image.getTexture());
 
-    glUniform1f(timeLocation, fw::Framework::getTimeSinceStart());
     glBindVertexArray(VAO);
+    glUniform3fv(lightPositionsLocation, numLights, reinterpret_cast<GLfloat*>(lightPositions.data()));
+    glUniform4fv(lightColorsLocation, numLights, reinterpret_cast<GLfloat*>(lightColors.data()));
 
     for (RenderObject& ro : renderObjects)
     {
-        glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(ro.mvp));
+        glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(ro.mvpMatrix));
+        glUniformMatrix4fv(modelMatrixLocation, 1, 0, glm::value_ptr(ro.transform.getModelMatrix()));
         glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
     }
 }
@@ -206,4 +211,16 @@ void FogApplication::createScene()
     {
         ro.transform.updateModelMatrix();
     }
+
+    lightPositions = {
+        {-7.0f, 1.0f, -10.0f},
+        {-7.0f, 1.0f, 5.0f},
+        {7.0f, 1.0f, -10.0f},
+        {7.0f, 1.0f, 5.0f}};
+
+    lightColors = {
+        {1.0f, 0.0f, 0.0f, 5.0f},
+        {0.0f, 1.0f, 0.0f, 5.0f},
+        {0.0f, 0.0f, 1.0f, 5.0f},
+        {1.0f, 0.0f, 1.0f, 5.0f}};
 }

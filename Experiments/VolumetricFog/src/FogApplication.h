@@ -27,7 +27,7 @@ private:
     struct RenderObject
     {
         fw::Transformation transform;
-        glm::mat4 mvp;
+        glm::mat4 mvpMatrix;
     };
 
     fw::Camera camera;
@@ -35,6 +35,8 @@ private:
     fw::Shader shader;
     fw::Image image;
     std::vector<RenderObject> renderObjects;
+    std::vector<glm::vec3> lightPositions;
+    std::vector<glm::vec4> lightColors;
     GLuint VAO = 0;
     GLuint vertexBuffer = 0;
     GLuint indexBuffer = 0;
