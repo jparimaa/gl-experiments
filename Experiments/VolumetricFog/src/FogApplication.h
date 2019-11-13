@@ -32,9 +32,11 @@ private:
 
     fw::Camera camera;
     fw::CameraController cameraController;
-    fw::Shader shader;
+    fw::Shader simpleShader;
+    fw::Shader diffuseShader;
     fw::Image image;
     std::vector<RenderObject> renderObjects;
+    std::vector<RenderObject> lightRenderObjects;
     std::vector<glm::vec3> lightPositions;
     std::vector<glm::vec4> lightColors;
     GLuint VAO = 0;
