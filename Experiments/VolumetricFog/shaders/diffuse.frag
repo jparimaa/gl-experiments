@@ -1,7 +1,7 @@
 #version 450 core
 
-#define numLights 4
-layout (location = 10) uniform vec3 lightPositions[numLights];
+#define numLights 2
+layout (location = 10) uniform vec3 lightDirections[numLights];
 layout (location = 14) uniform vec4 lightColors[numLights];
 layout (binding = 0) uniform sampler2D tex0;
 
@@ -13,16 +13,10 @@ out vec4 color;
 
 void main()
 {
-	for (int i = 0; i < 4; ++i)	
+	for (int i = 0; i < numLights; ++i)	
 	{
-		vec3 toLightVec = lightPositions[i] - worldPos;
-
-		vec3 dir = normalize(toLightVec);		
-		float diffuse = max(dot(worldNormal, dir), 0.0);
-
-		float distance = length(toLightVec);
-
-		color += diffuse * lightColors[i] * lightColors[i].a * (1.0f / distance);
+		float diffuse = max(dot(worldNormal, -lightDirections[i]), 0.0);
+		color += diffuse * lightColors[i] * lightColors[i].a;
 	}
 	color += vec4(0.1f) * vec4(texture(tex0, texCoord));
 } 
