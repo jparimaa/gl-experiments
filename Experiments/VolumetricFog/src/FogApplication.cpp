@@ -14,10 +14,15 @@
 namespace
 {
 const GLint mvpMatrixLocation = 0;
+const GLint lightSpaceMatrixLocation = 0;
 const GLint modelMatrixLocation = 1;
 const GLint lightDirectionsLocation = 10;
 const GLint lightColorsLocation = 14;
+const GLint lightColorLocation = 2;
 const GLsizei numLights = 2;
+const int shadowMapWidth = 1024;
+const int shadowMapHeight = 1024;
+
 } // namespace
 
 FogApplication::FogApplication()
@@ -48,6 +53,20 @@ bool FogApplication::initialize()
     }
     std::cout << "Loaded shader " << path << " (" << diffuseShader.getProgram() << ")\n";
 
+    path = std::string(ROOT_PATH) + "Experiments/VolumetricFog/shaders/shadowMap";
+    if (!shadowMapShader.createProgram({path + ".vert", path + ".frag"}))
+    {
+        return false;
+    }
+    std::cout << "Loaded shader " << path << " (" << shadowMapShader.getProgram() << ")\n";
+
+    path = std::string(ROOT_PATH) + "Experiments/VolumetricFog/shaders/simple";
+    if (!simpleShader.createProgram({path + ".vert", path + ".frag"}))
+    {
+        return false;
+    }
+    std::cout << "Loaded shader " << path << " (" << simpleShader.getProgram() << ")\n";
+
     fw::Model model;
     std::string modelFile = std::string(ASSETS_PATH) + "Models/cube.obj";
     if (!model.loadModel(modelFile))
@@ -65,6 +84,7 @@ bool FogApplication::initialize()
     std::cout << "Loaded texture " << textureFile << " (" << image.getTexture() << ")\n";
 
     createBuffers(model);
+    createShadowMaps();
     createScene();
 
     glClearColor(0.0f, 0.0f, 0.3f, 1.0f);
@@ -85,17 +105,41 @@ void FogApplication::update()
     {
         ro.mvpMatrix = camera.getProjectionMatrix() * viewMatrix * ro.transform.getModelMatrix();
     }
+
+    for (RenderObject& ro : lightRenderObjects)
+    {
+        ro.mvpMatrix = camera.getProjectionMatrix() * viewMatrix * ro.transform.getModelMatrix();
+    }
 }
 
 void FogApplication::render()
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glBindVertexArray(VAO);
+
+    glUseProgram(shadowMapShader.getProgram());
+    glViewport(0, 0, shadowMapWidth, shadowMapHeight);
+
+    for (int i = 0; i < numLights; ++i)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowMapBuffers[i]);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        for (size_t j = 0; j < renderObjects.size(); ++j)
+        {
+            glUniformMatrix4fv(lightSpaceMatrixLocation, 1, 0, glm::value_ptr(lightSpaceMatrices[i]));
+            glUniformMatrix4fv(modelMatrixLocation, 1, 0, glm::value_ptr(renderObjects[j].transform.getModelMatrix()));
+            glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+        }
+    }
+
     glUseProgram(diffuseShader.getProgram());
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, 1024, 768);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, image.getTexture());
 
-    glBindVertexArray(VAO);
     glUniform3fv(lightDirectionsLocation, numLights, reinterpret_cast<GLfloat*>(lightDirections.data()));
     glUniform4fv(lightColorsLocation, numLights, reinterpret_cast<GLfloat*>(lightColors.data()));
 
@@ -105,10 +149,15 @@ void FogApplication::render()
         glUniformMatrix4fv(modelMatrixLocation, 1, 0, glm::value_ptr(ro.transform.getModelMatrix()));
         glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
     }
-}
 
-void FogApplication::gui()
-{
+    glUseProgram(simpleShader.getProgram());
+
+    for (size_t i = 0; i < lightRenderObjects.size(); ++i)
+    {
+        glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(lightRenderObjects[i].mvpMatrix));
+        glUniform3f(lightColorLocation, lightColors[i].r, lightColors[i].g, lightColors[i].b);
+        glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+    }
 }
 
 void FogApplication::createBuffers(const fw::Model& model)
@@ -142,6 +191,32 @@ void FogApplication::createBuffers(const fw::Model& model)
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (GLvoid*)(5 * floatSize));
     glEnableVertexAttribArray(2);
+}
+
+void FogApplication::createShadowMaps()
+{
+    shadowMapBuffers.resize(numLights);
+    shadowMapTextures.resize(numLights);
+
+    glGenFramebuffers(numLights, shadowMapBuffers.data());
+    glGenTextures(numLights, shadowMapTextures.data());
+
+    for (int i = 0; i < numLights; ++i)
+    {
+        glBindTexture(GL_TEXTURE_2D, shadowMapTextures[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowMapWidth, shadowMapHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowMapBuffers[i]);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMapTextures[i], 0);
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+    }
 }
 
 void FogApplication::createScene()
@@ -210,6 +285,10 @@ void FogApplication::createScene()
         ro.transform.updateModelMatrix();
     }
 
+    lightPositions = {
+        {-7.0f, 4.0f, 0.0f},
+        {7.0f, 4.0f, 0.0f}};
+
     lightDirections = {
         glm::normalize(glm::vec3(1.0, -1.0f, 0.0f)),
         glm::normalize(glm::vec3(-1.0, -1.0f, 0.0f))};
@@ -217,4 +296,20 @@ void FogApplication::createScene()
     lightColors = {
         {1.0f, 0.0f, 0.0f, 1.0f},
         {0.0f, 0.0f, 1.0f, 1.0f}};
+
+    lightSpaceMatrices.resize(numLights);
+    lightRenderObjects.resize(numLights);
+
+    for (int i = 0; i < numLights; ++i)
+    {
+        glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 20.0f);
+        glm::mat4 lightView = glm::lookAt(lightPositions[i], lightPositions[i] + lightDirections[i], glm::vec3(0.0, 1.0, 0.0));
+        lightSpaceMatrices[i] = lightProjection * lightView;
+
+        fw::Transformation t;
+        t.position = lightPositions[i];
+        t.scale = glm::vec3(0.1f);
+        lightRenderObjects[i].transform = t;
+        lightRenderObjects[i].transform.updateModelMatrix();
+    }
 }
