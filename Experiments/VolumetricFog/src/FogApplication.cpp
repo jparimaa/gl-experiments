@@ -160,6 +160,13 @@ void FogApplication::render()
     }
 }
 
+void FogApplication::gui()
+{
+    fw::displayFps();
+    fw::displayVec3("Position %.1f %.1f %.1f", camera.getTransformation().position);
+    fw::displayVec3("Rotation %.1f %.1f %.1f", camera.getTransformation().rotation);
+}
+
 void FogApplication::createBuffers(const fw::Model& model)
 {
     glGenVertexArrays(1, &VAO);
