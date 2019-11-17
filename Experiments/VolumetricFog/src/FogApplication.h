@@ -37,6 +37,11 @@ private:
     fw::Shader simpleShader;
     fw::Image image;
 
+    GLuint VAO = 0;
+    GLuint vertexBuffer = 0;
+    GLuint indexBuffer = 0;
+    unsigned int numIndices = 0;
+
     std::vector<RenderObject> renderObjects;
     std::vector<RenderObject> lightRenderObjects;
 
@@ -45,11 +50,7 @@ private:
     std::vector<glm::vec4> lightColors;
     std::vector<glm::mat4> lightSpaceMatrices;
 
-    GLuint VAO = 0;
-    GLuint vertexBuffer = 0;
-    GLuint indexBuffer = 0;
-    unsigned int numIndices = 0;
-
+    std::vector<GLuint> shadowMapLocations;
     std::vector<GLuint> shadowMapBuffers;
     std::vector<GLuint> shadowMapTextures;
 
