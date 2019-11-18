@@ -20,9 +20,11 @@ const GLint lightDirectionsLocation = 10;
 const GLint lightColorsLocation = 14;
 const GLint simplelightColorLocation = 2;
 const GLint albedoTexBinding = 0;
+const GLint densitySSBOLocation = 0;
 const GLsizei numLights = 2;
 const int shadowMapWidth = 1024;
 const int shadowMapHeight = 1024;
+const int densityBufferSize = 160 * 90 * 128 * sizeof(float);
 } // namespace
 
 FogApplication::FogApplication()
@@ -47,47 +49,41 @@ bool FogApplication::initialize()
     cameraController.setMovementSpeed(3.0f);
 
     std::string path = std::string(ROOT_PATH) + "Experiments/VolumetricFog/shaders/diffuse";
-    if (!diffuseShader.createProgram({path + ".vert", path + ".frag"}))
-    {
-        return false;
-    }
-    std::cout << "Loaded shader " << path << " (" << diffuseShader.getProgram() << ")\n";
+    bool status = true;
+
+    status = diffuseShader.createProgram({path + ".vert", path + ".frag"});
+    assert(status);
     shadowMapLocations.resize(numLights);
     shadowMapLocations[0] = glGetUniformLocation(diffuseShader.getProgram(), "shadowMaps[0]");
     shadowMapLocations[1] = glGetUniformLocation(diffuseShader.getProgram(), "shadowMaps[1]");
 
     path = std::string(ROOT_PATH) + "Experiments/VolumetricFog/shaders/shadowMap";
-    if (!shadowMapShader.createProgram({path + ".vert", path + ".frag"}))
-    {
-        return false;
-    }
-    std::cout << "Loaded shader " << path << " (" << shadowMapShader.getProgram() << ")\n";
+    status = shadowMapShader.createProgram({path + ".vert", path + ".frag"});
+    assert(status);
 
     path = std::string(ROOT_PATH) + "Experiments/VolumetricFog/shaders/simple";
-    if (!simpleShader.createProgram({path + ".vert", path + ".frag"}))
-    {
-        return false;
-    }
-    std::cout << "Loaded shader " << path << " (" << simpleShader.getProgram() << ")\n";
+    status = simpleShader.createProgram({path + ".vert", path + ".frag"});
+    assert(status);
+
+    path = std::string(ROOT_PATH) + "Experiments/VolumetricFog/shaders/density";
+    status = densityShader.createProgram({path + ".comp"});
+    assert(status);
+    densityBufferBlockIndex = glGetProgramResourceIndex(densityShader.getProgram(), GL_SHADER_STORAGE_BLOCK, "scatteringData");
+    glShaderStorageBlockBinding(densityShader.getProgram(), densityBufferBlockIndex, densitySSBOLocation);
 
     fw::Model model;
     std::string modelFile = std::string(ASSETS_PATH) + "Models/cube.obj";
-    if (!model.loadModel(modelFile))
-    {
-        return false;
-    }
-    std::cout << "Loaded model " << modelFile << "\n";
+    status = model.loadModel(modelFile);
+    assert(status);
 
     std::string textureFile = std::string(ASSETS_PATH) + "Textures/checker.png";
-    if (!image.load(textureFile))
-    {
-        return false;
-    }
+    status = image.load(textureFile);
+    assert(status);
     image.create2dTexture();
-    std::cout << "Loaded texture " << textureFile << " (" << image.getTexture() << ")\n";
 
-    createBuffers(model);
+    createVertexBuffers(model);
     createShadowMaps();
+    createDensityBuffers();
     createScene();
 
     glClearColor(0.0f, 0.0f, 0.3f, 1.0f);
@@ -134,6 +130,11 @@ void FogApplication::render()
             glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
         }
     }
+
+    // Calculate density
+    glUseProgram(densityShader.getProgram());
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, densityBufferBlockIndex, densityBuffer);
+    glDispatchCompute(5, 5, 128);
 
     // Render diffuse lighting with shadows
     glUseProgram(diffuseShader.getProgram());
@@ -182,7 +183,7 @@ void FogApplication::gui()
     fw::displayVec3("Rotation %.1f %.1f %.1f", camera.getTransformation().rotation);
 }
 
-void FogApplication::createBuffers(const fw::Model& model)
+void FogApplication::createVertexBuffers(const fw::Model& model)
 {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -239,6 +240,17 @@ void FogApplication::createShadowMaps()
         glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);
     }
+}
+
+void FogApplication::createDensityBuffers()
+{
+    glGenBuffers(1, &densityBuffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, densityBuffer);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, densityBufferSize, nullptr, GL_DYNAMIC_DRAW);
+
+    glGenBuffers(1, &cumulativeDensityBuffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, cumulativeDensityBuffer);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, densityBufferSize, nullptr, GL_DYNAMIC_DRAW);
 }
 
 void FogApplication::createScene()
