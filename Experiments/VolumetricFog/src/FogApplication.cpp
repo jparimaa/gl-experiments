@@ -14,6 +14,7 @@
 namespace
 {
 const GLint mvpMatrixLocation = 0;
+const GLint lightSpaceMatrixLocation = 0;
 const GLint modelMatrixLocation = 1;
 const GLint lightSpaceMatrixLocation = 2;
 const GLint lightDirectionsLocation = 10;
@@ -55,6 +56,20 @@ bool FogApplication::initialize()
     shadowMapLocations.resize(numLights);
     shadowMapLocations[0] = glGetUniformLocation(diffuseShader.getProgram(), "shadowMaps[0]");
     shadowMapLocations[1] = glGetUniformLocation(diffuseShader.getProgram(), "shadowMaps[1]");
+
+    path = std::string(ROOT_PATH) + "Experiments/VolumetricFog/shaders/shadowMap";
+    if (!shadowMapShader.createProgram({path + ".vert", path + ".frag"}))
+    {
+        return false;
+    }
+    std::cout << "Loaded shader " << path << " (" << shadowMapShader.getProgram() << ")\n";
+
+    path = std::string(ROOT_PATH) + "Experiments/VolumetricFog/shaders/simple";
+    if (!simpleShader.createProgram({path + ".vert", path + ".frag"}))
+    {
+        return false;
+    }
+    std::cout << "Loaded shader " << path << " (" << simpleShader.getProgram() << ")\n";
 
     path = std::string(ROOT_PATH) + "Experiments/VolumetricFog/shaders/shadowMap";
     if (!shadowMapShader.createProgram({path + ".vert", path + ".frag"}))
@@ -173,6 +188,15 @@ void FogApplication::render()
         glUniform3f(simplelightColorLocation, lightColors[i].r, lightColors[i].g, lightColors[i].b);
         glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
     }
+
+    glUseProgram(simpleShader.getProgram());
+
+    for (size_t i = 0; i < lightRenderObjects.size(); ++i)
+    {
+        glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(lightRenderObjects[i].mvpMatrix));
+        glUniform3f(lightColorLocation, lightColors[i].r, lightColors[i].g, lightColors[i].b);
+        glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+    }
 }
 
 void FogApplication::gui()
@@ -232,6 +256,7 @@ void FogApplication::createShadowMaps()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
         float borderColor[] = {0.0f, 0.0f, 0.0f, 0.0f};
+        float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
         glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
         glBindFramebuffer(GL_FRAMEBUFFER, shadowMapBuffers[i]);
@@ -323,6 +348,7 @@ void FogApplication::createScene()
     lightColors = {
         {1.0f, 0.5f, 0.5f, 1.0f},
         {0.5f, 0.5f, 1.0f, 1.0f}};
+
 
     lightSpaceMatrices.resize(numLights);
     lightRenderObjects.resize(numLights);
