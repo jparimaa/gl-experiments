@@ -14,6 +14,7 @@
 namespace
 {
 const GLint mvpMatrixLocation = 0;
+const GLint lightSpaceMatrixLocation = 0;
 const GLint modelMatrixLocation = 1;
 const GLint lightSpaceMatrixLocation = 2;
 const GLint lightDirectionsLocation = 10;
@@ -70,6 +71,20 @@ bool FogApplication::initialize()
     assert(status);
     densityBufferBlockIndex = glGetProgramResourceIndex(densityShader.getProgram(), GL_SHADER_STORAGE_BLOCK, "scatteringData");
     glShaderStorageBlockBinding(densityShader.getProgram(), densityBufferBlockIndex, densitySSBOLocation);
+
+    path = std::string(ROOT_PATH) + "Experiments/VolumetricFog/shaders/shadowMap";
+    if (!shadowMapShader.createProgram({path + ".vert", path + ".frag"}))
+    {
+        return false;
+    }
+    std::cout << "Loaded shader " << path << " (" << shadowMapShader.getProgram() << ")\n";
+
+    path = std::string(ROOT_PATH) + "Experiments/VolumetricFog/shaders/simple";
+    if (!simpleShader.createProgram({path + ".vert", path + ".frag"}))
+    {
+        return false;
+    }
+    std::cout << "Loaded shader " << path << " (" << simpleShader.getProgram() << ")\n";
 
     fw::Model model;
     std::string modelFile = std::string(ASSETS_PATH) + "Models/cube.obj";
@@ -172,6 +187,15 @@ void FogApplication::render()
     {
         glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(lightRenderObjects[i].mvpMatrix));
         glUniform3f(simplelightColorLocation, lightColors[i].r, lightColors[i].g, lightColors[i].b);
+        glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+    }
+
+    glUseProgram(simpleShader.getProgram());
+
+    for (size_t i = 0; i < lightRenderObjects.size(); ++i)
+    {
+        glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(lightRenderObjects[i].mvpMatrix));
+        glUniform3f(lightColorLocation, lightColors[i].r, lightColors[i].g, lightColors[i].b);
         glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
     }
 }
