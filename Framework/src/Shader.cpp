@@ -57,6 +57,10 @@ bool Shader::attachShader(const std::string& filename)
         {
             return GL_TESS_CONTROL_SHADER;
         }
+        if (s.find(".comp") != std::string::npos)
+        {
+            return GL_COMPUTE_SHADER;
+        }
         return 0;
     };
 

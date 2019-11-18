@@ -35,7 +35,16 @@ private:
     fw::Shader diffuseShader;
     fw::Shader shadowMapShader;
     fw::Shader simpleShader;
+    fw::Shader densityShader;
     fw::Image image;
+
+    GLuint VAO = 0;
+    GLuint vertexBuffer = 0;
+    GLuint indexBuffer = 0;
+    GLuint densityBuffer = 0;
+    GLuint densityBufferBlockIndex = 0;
+    GLuint cumulativeDensityBuffer = 0;
+    unsigned int numIndices = 0;
 
     std::vector<RenderObject> renderObjects;
     std::vector<RenderObject> lightRenderObjects;
@@ -45,15 +54,12 @@ private:
     std::vector<glm::vec4> lightColors;
     std::vector<glm::mat4> lightSpaceMatrices;
 
-    GLuint VAO = 0;
-    GLuint vertexBuffer = 0;
-    GLuint indexBuffer = 0;
-    unsigned int numIndices = 0;
-
+    std::vector<GLuint> shadowMapLocations;
     std::vector<GLuint> shadowMapBuffers;
     std::vector<GLuint> shadowMapTextures;
 
-    void createBuffers(const fw::Model& model);
+    void createVertexBuffers(const fw::Model& model);
     void createShadowMaps();
+    void createDensityBuffers();
     void createScene();
 };
