@@ -14,7 +14,6 @@
 namespace
 {
 const GLint mvpMatrixLocation = 0;
-const GLint lightSpaceMatrixLocation = 0;
 const GLint modelMatrixLocation = 1;
 const GLint lightSpaceMatrixLocation = 2;
 const GLint lightDirectionsLocation = 10;
@@ -195,7 +194,7 @@ void FogApplication::render()
     for (size_t i = 0; i < lightRenderObjects.size(); ++i)
     {
         glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(lightRenderObjects[i].mvpMatrix));
-        glUniform3f(lightColorLocation, lightColors[i].r, lightColors[i].g, lightColors[i].b);
+        glUniform3f(simplelightColorLocation, lightColors[i].r, lightColors[i].g, lightColors[i].b);
         glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
     }
 }
