@@ -48,4 +48,19 @@ void Camera::setAspectRatio(float aspectRatio)
     ratio = aspectRatio;
     updateProjectionMatrix();
 }
+
+float Camera::getNearClipDistance() const
+{
+    return nearClipDistance;
+}
+
+float Camera::getFarClipDistance() const
+{
+    return farClipDistance;
+}
+
+float Camera::getFOV() const
+{
+    return FOV;
+}
 } // namespace fw

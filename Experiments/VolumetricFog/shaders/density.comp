@@ -4,16 +4,50 @@ layout (local_size_x = 32, local_size_y = 18, local_size_z = 1) in;
 
 layout (std430, binding = 0) buffer scatteringData
 {
-    float scattering[];
+    vec4 scattering[];
 };
+
+#define toRadians 0.0174533
+#define numLights 2
+layout (location = 1) uniform mat4 projectionMatrix;
+layout (location = 2) uniform mat4 inverseViewMatrix;
+layout (location = 3) uniform mat4 lightSpaceVP[numLights];
+layout (location = 5) uniform float nearPlane;
+layout (location = 6) uniform float farPlane;
+layout (location = 7) uniform float fov;
+layout (location = 8) uniform sampler2D shadowMaps[numLights];
+
+vec3 getViewSpacePosition(float nearPlane, float farPlane, float fov)
+{
+	uint xg = gl_WorkGroupID.x * gl_WorkGroupSize.x + gl_LocalInvocationID.x;
+	uint yg = gl_WorkGroupID.y * gl_WorkGroupSize.y + gl_LocalInvocationID.y;
+	uint zg = gl_WorkGroupID.z;
+
+	float zThickness = (farPlane - nearPlane) / float(gl_NumWorkGroups.z);
+	float z = nearPlane + (zg * zThickness);
+
+	float sizeAtZ = tan(fov / 2.0 * toRadians) * z * 2.0;
+
+	float yThickness = sizeAtZ / float(gl_WorkGroupSize.y * gl_NumWorkGroups.y);
+	float y = (-sizeAtZ / 2.0) + (yThickness * yg);
+
+	float xThickness = sizeAtZ / float(gl_WorkGroupSize.x * gl_NumWorkGroups.x);
+	float x = (-sizeAtZ / 2.0) + (xThickness * xg);
+	
+
+	return vec3(x, y, z);
+}
 
 void main()
 {
+	
 	uint localSize = gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z;
 	uint globalIndex =  
 			(gl_WorkGroupID.z * gl_NumWorkGroups.x * gl_NumWorkGroups.y * localSize) +
 			(gl_WorkGroupID.y * gl_NumWorkGroups.x * localSize) + 
 			(gl_WorkGroupID.x * localSize) +
 			gl_LocalInvocationIndex;
-	scattering[globalIndex] = gl_LocalInvocationIndex;
+
+	vec3 pos = getViewSpacePosition(nearPlane, farPlane, fov);
+	scattering[globalIndex] = vec4(pos, 0.0f);
 }

@@ -24,7 +24,7 @@ const GLint densitySSBOLocation = 0;
 const GLsizei numLights = 2;
 const int shadowMapWidth = 1024;
 const int shadowMapHeight = 1024;
-const int densityBufferSize = 160 * 90 * 128 * sizeof(float);
+const int densityBufferSize = 160 * 90 * 128 * sizeof(float) * 4;
 } // namespace
 
 FogApplication::FogApplication()
@@ -148,6 +148,21 @@ void FogApplication::render()
     // Calculate density
     glUseProgram(densityShader.getProgram());
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, densityBufferBlockIndex, densityBuffer);
+    glUniformMatrix4fv(1, 1, 0, glm::value_ptr(camera.getProjectionMatrix()));
+    glUniformMatrix4fv(2, 1, 0, glm::value_ptr(glm::inverse(camera.getViewMatrix())));
+    glUniformMatrix4fv(3, 2, 0, glm::value_ptr(*lightSpaceMatrices.data()));
+    glUniform1f(5, camera.getNearClipDistance());
+    glUniform1f(6, camera.getFarClipDistance());
+    glUniform1f(7, camera.getFOV());
+
+    for (size_t i = 0; i < shadowMapTextures.size(); ++i)
+    {
+        GLint gli = static_cast<GLint>(i);
+        glActiveTexture(GL_TEXTURE0 + gli);
+        glBindTexture(GL_TEXTURE_2D, shadowMapTextures[i]);
+        glUniform1i(8 + gli, gli);
+    }
+
     glDispatchCompute(5, 5, 128);
 
     // Render diffuse lighting with shadows
