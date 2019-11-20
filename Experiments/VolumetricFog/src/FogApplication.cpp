@@ -6,6 +6,8 @@
 
 #include <imgui/imgui.h>
 #include <glm/gtc/type_ptr.hpp>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
 
 #include <iostream>
 #include <fstream>
@@ -148,7 +150,6 @@ void FogApplication::render()
     // Calculate density
     glUseProgram(densityShader.getProgram());
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, densityBufferBlockIndex, densityBuffer);
-    glUniformMatrix4fv(1, 1, 0, glm::value_ptr(camera.getProjectionMatrix()));
     glUniformMatrix4fv(2, 1, 0, glm::value_ptr(glm::inverse(camera.getViewMatrix())));
     glUniformMatrix4fv(3, 2, 0, glm::value_ptr(*lightSpaceMatrices.data()));
     glUniform1f(5, camera.getNearClipDistance());
@@ -164,6 +165,35 @@ void FogApplication::render()
     }
 
     glDispatchCompute(5, 5, 128);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, densityBuffer);
+
+    GLfloat* ptr;
+    ptr = (GLfloat*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+
+    int numFloats = densityBufferSize / sizeof(float);
+    std::vector<uint8_t> vec(numFloats, -1);
+    for (int i = 0; i < numFloats; ++i)
+    {
+        vec[i] = static_cast<uint8_t>(ptr[i]);
+    }
+
+    for (int i = 0; i < 128; ++i)
+    {
+        std::string fileName = std::to_string(i) + ".png";
+        stbi_write_png(fileName.c_str(), 160, 90, 4, &vec[i * 160 * 90 * 4], 0);
+    }
+
+    // clang-format off
+    std::vector<uint8_t> test{
+        255, 0, 0, 255, 
+		0, 255, 0, 255, 
+		0, 0, 255, 255, 
+		255, 255, 255, 255};
+    // clang-format on
+    stbi_write_png("test.png", 2, 2, 4, test.data(), 0);
+
+    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
     // Render diffuse lighting with shadows
     glUseProgram(diffuseShader.getProgram());
