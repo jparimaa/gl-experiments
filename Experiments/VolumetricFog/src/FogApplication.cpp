@@ -29,7 +29,8 @@ const int shadowMapHeight = 1024;
 const int densityBufferSize = 160 * 90 * 128 * sizeof(float) * 4;
 } // namespace
 
-FogApplication::FogApplication()
+FogApplication::FogApplication() :
+    camera(45.0f, 4.0f / 3.0f, 0.5f, 50.0f)
 {
 }
 
@@ -150,11 +151,12 @@ void FogApplication::render()
     // Calculate density
     glUseProgram(densityShader.getProgram());
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, densityBufferBlockIndex, densityBuffer);
-    glUniformMatrix4fv(2, 1, 0, glm::value_ptr(glm::inverse(camera.getViewMatrix())));
-    glUniformMatrix4fv(3, 2, 0, glm::value_ptr(*lightSpaceMatrices.data()));
-    glUniform1f(5, camera.getNearClipDistance());
-    glUniform1f(6, camera.getFarClipDistance());
-    glUniform1f(7, camera.getFOV());
+    glUniformMatrix4fv(1, 1, 0, glm::value_ptr(glm::inverse(camera.getViewMatrix())));
+    glUniformMatrix4fv(2, 2, 0, glm::value_ptr(*lightSpaceMatrices.data()));
+    glUniform1f(4, camera.getNearClipDistance());
+    glUniform1f(5, camera.getFarClipDistance());
+    glUniform1f(6, camera.getFOV());
+    glUniform1f(7, 34.52f);
 
     for (size_t i = 0; i < shadowMapTextures.size(); ++i)
     {
@@ -165,6 +167,7 @@ void FogApplication::render()
     }
 
     glDispatchCompute(5, 5, 128);
+    /*
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, densityBuffer);
 
@@ -184,17 +187,8 @@ void FogApplication::render()
         stbi_write_png(fileName.c_str(), 160, 90, 4, &vec[i * 160 * 90 * 4], 0);
     }
 
-    // clang-format off
-    std::vector<uint8_t> test{
-        255, 0, 0, 255, 
-		0, 255, 0, 255, 
-		0, 0, 255, 255, 
-		255, 255, 255, 255};
-    // clang-format on
-    stbi_write_png("test.png", 2, 2, 4, test.data(), 0);
-
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-
+	*/
     // Render diffuse lighting with shadows
     glUseProgram(diffuseShader.getProgram());
 

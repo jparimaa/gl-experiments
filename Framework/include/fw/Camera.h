@@ -9,6 +9,7 @@ class Camera
 {
 public:
     explicit Camera();
+    explicit Camera(float fov, float aspectRatio, float ncd, float fcd);
     ~Camera();
 
     const glm::mat4x4& updateViewMatrix();

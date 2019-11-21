@@ -10,6 +10,16 @@ Camera::Camera()
     updateProjectionMatrix();
 }
 
+Camera::Camera(float fov, float aspectRatio, float ncd, float fcd) :
+    FOV(fov),
+    ratio(aspectRatio),
+    nearClipDistance(ncd),
+    farClipDistance(fcd)
+{
+    updateViewMatrix();
+    updateProjectionMatrix();
+}
+
 Camera::~Camera()
 {
 }
