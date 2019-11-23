@@ -36,6 +36,7 @@ private:
     fw::Shader shadowMapShader;
     fw::Shader simpleShader;
     fw::Shader densityShader;
+    fw::Shader cumulativeDensityShader;
     fw::Image image;
 
     GLuint VAO = 0;
@@ -43,7 +44,9 @@ private:
     GLuint indexBuffer = 0;
     GLuint densityBuffer = 0;
     GLuint densityBufferBlockIndex = 0;
-    GLuint cumulativeDensityBuffer = 0;
+    GLuint cumulatveDensityBuffer = 0;
+    GLuint cumulatveDensityInBufferBlockIndex = 0;
+    GLuint cumulatveDensityOutBufferBlockIndex = 0;
     unsigned int numIndices = 0;
 
     std::vector<RenderObject> renderObjects;

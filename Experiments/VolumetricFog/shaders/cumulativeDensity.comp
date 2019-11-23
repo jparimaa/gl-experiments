@@ -1,0 +1,36 @@
+#version 450 core
+
+#define DEPTH 128
+
+layout (local_size_x = 32, local_size_y = 18, local_size_z = 1) in;
+
+layout (std430, binding = 0) buffer scatteringData
+{
+    vec4 scattering[];
+};
+
+layout (std430, binding = 1) buffer cumulativeScatteringData
+{
+    vec4 cumulativeScattering[];
+};
+
+void main()
+{
+    vec4 sum = vec4(0.0f);
+    uint localSize = gl_WorkGroupSize.x * gl_WorkGroupSize.y;
+
+    uint xy = 
+            gl_WorkGroupID.y * gl_NumWorkGroups.x * localSize +
+            gl_WorkGroupID.x * localSize +
+            gl_LocalInvocationIndex;
+
+    for (uint i = 0; i < DEPTH; ++i)
+    {
+        uint z = i * gl_NumWorkGroups.x * gl_NumWorkGroups.y * localSize;
+        uint index = z + xy;
+            
+        sum += scattering[index];
+        sum.a = 255.0f;
+        cumulativeScattering[index] = sum;
+    }
+}

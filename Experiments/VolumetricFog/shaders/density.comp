@@ -51,7 +51,7 @@ void main()
 		float currentDepth = lightProjectedPos.z;
 		float closestDepth = texture(shadowMaps[i], lightProjectedPos.xy).r; 
 		float bias = 0.005;
-		scatter += currentDepth - bias > closestDepth ? 0.0f : 120.0f;  
+		scatter += currentDepth - bias > closestDepth ? 0.0f : 2.0f;  
 	}
 
 	uint localSize = gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z;

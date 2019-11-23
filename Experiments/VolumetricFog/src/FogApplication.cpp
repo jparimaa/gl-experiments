@@ -15,18 +15,33 @@
 
 namespace
 {
-const GLint mvpMatrixLocation = 0;
-const GLint modelMatrixLocation = 1;
-const GLint lightSpaceMatrixLocation = 2;
-const GLint lightDirectionsLocation = 10;
-const GLint lightColorsLocation = 14;
-const GLint simplelightColorLocation = 2;
-const GLint albedoTexBinding = 0;
-const GLint densitySSBOLocation = 0;
 const GLsizei numLights = 2;
 const int shadowMapWidth = 1024;
 const int shadowMapHeight = 1024;
 const int densityBufferSize = 160 * 90 * 128 * sizeof(float) * 4;
+
+void writeDensityImages(GLuint buffer)
+{
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
+
+    GLfloat* ptr;
+    ptr = (GLfloat*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+
+    int numFloats = densityBufferSize / sizeof(float);
+    std::vector<uint8_t> vec(numFloats, -1);
+    for (int i = 0; i < numFloats; ++i)
+    {
+        vec[i] = static_cast<uint8_t>(ptr[i]);
+    }
+
+    for (int i = 0; i < 128; ++i)
+    {
+        std::string fileName = std::to_string(i) + ".png";
+        stbi_write_png(fileName.c_str(), 160, 90, 4, &vec[i * 160 * 90 * 4], 0);
+    }
+
+    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+}
 } // namespace
 
 FogApplication::FogApplication() :
@@ -72,7 +87,15 @@ bool FogApplication::initialize()
     status = densityShader.createProgram({path + ".comp"});
     assert(status);
     densityBufferBlockIndex = glGetProgramResourceIndex(densityShader.getProgram(), GL_SHADER_STORAGE_BLOCK, "scatteringData");
-    glShaderStorageBlockBinding(densityShader.getProgram(), densityBufferBlockIndex, densitySSBOLocation);
+    glShaderStorageBlockBinding(densityShader.getProgram(), densityBufferBlockIndex, 0);
+
+    path = std::string(ROOT_PATH) + "Experiments/VolumetricFog/shaders/cumulativeDensity";
+    status = cumulativeDensityShader.createProgram({path + ".comp"});
+    assert(status);
+    cumulatveDensityInBufferBlockIndex = glGetProgramResourceIndex(cumulativeDensityShader.getProgram(), GL_SHADER_STORAGE_BLOCK, "scatteringData");
+    cumulatveDensityOutBufferBlockIndex = glGetProgramResourceIndex(cumulativeDensityShader.getProgram(), GL_SHADER_STORAGE_BLOCK, "cumulativeScatteringData");
+    glShaderStorageBlockBinding(cumulativeDensityShader.getProgram(), cumulatveDensityInBufferBlockIndex, 0);
+    glShaderStorageBlockBinding(cumulativeDensityShader.getProgram(), cumulatveDensityOutBufferBlockIndex, 1);
 
     path = std::string(ROOT_PATH) + "Experiments/VolumetricFog/shaders/shadowMap";
     if (!shadowMapShader.createProgram({path + ".vert", path + ".frag"}))
@@ -142,8 +165,8 @@ void FogApplication::render()
         glClear(GL_DEPTH_BUFFER_BIT);
         for (size_t j = 0; j < renderObjects.size(); ++j)
         {
-            glUniformMatrix4fv(lightSpaceMatrixLocation, 1, 0, glm::value_ptr(lightSpaceMatrices[i]));
-            glUniformMatrix4fv(modelMatrixLocation, 1, 0, glm::value_ptr(renderObjects[j].transform.getModelMatrix()));
+            glUniformMatrix4fv(1, 1, 0, glm::value_ptr(renderObjects[j].transform.getModelMatrix()));
+            glUniformMatrix4fv(2, 1, 0, glm::value_ptr(lightSpaceMatrices[i]));
             glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
         }
     }
@@ -167,28 +190,15 @@ void FogApplication::render()
     }
 
     glDispatchCompute(5, 5, 128);
-    /*
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, densityBuffer);
 
-    GLfloat* ptr;
-    ptr = (GLfloat*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+    // Calculate cumulative density
+    glUseProgram(cumulativeDensityShader.getProgram());
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, densityBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, cumulatveDensityBuffer);
+    glDispatchCompute(5, 5, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-    int numFloats = densityBufferSize / sizeof(float);
-    std::vector<uint8_t> vec(numFloats, -1);
-    for (int i = 0; i < numFloats; ++i)
-    {
-        vec[i] = static_cast<uint8_t>(ptr[i]);
-    }
-
-    for (int i = 0; i < 128; ++i)
-    {
-        std::string fileName = std::to_string(i) + ".png";
-        stbi_write_png(fileName.c_str(), 160, 90, 4, &vec[i * 160 * 90 * 4], 0);
-    }
-
-    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-	*/
     // Render diffuse lighting with shadows
     glUseProgram(diffuseShader.getProgram());
 
@@ -207,14 +217,14 @@ void FogApplication::render()
         glUniform1i(shadowMapLocations[i], 1 + gli);
     }
 
-    glUniform3fv(lightDirectionsLocation, numLights, reinterpret_cast<GLfloat*>(lightDirections.data()));
-    glUniform4fv(lightColorsLocation, numLights, reinterpret_cast<GLfloat*>(lightColors.data()));
+    glUniform3fv(10, numLights, reinterpret_cast<GLfloat*>(lightDirections.data()));
+    glUniform4fv(14, numLights, reinterpret_cast<GLfloat*>(lightColors.data()));
 
     for (RenderObject& ro : renderObjects)
     {
-        glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(ro.mvpMatrix));
-        glUniformMatrix4fv(modelMatrixLocation, 1, 0, glm::value_ptr(ro.transform.getModelMatrix()));
-        glUniformMatrix4fv(lightSpaceMatrixLocation, 2, 0, glm::value_ptr(*lightSpaceMatrices.data()));
+        glUniformMatrix4fv(0, 1, 0, glm::value_ptr(ro.mvpMatrix));
+        glUniformMatrix4fv(1, 1, 0, glm::value_ptr(ro.transform.getModelMatrix()));
+        glUniformMatrix4fv(2, 2, 0, glm::value_ptr(*lightSpaceMatrices.data()));
         glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
     }
 
@@ -223,8 +233,8 @@ void FogApplication::render()
 
     for (size_t i = 0; i < lightRenderObjects.size(); ++i)
     {
-        glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(lightRenderObjects[i].mvpMatrix));
-        glUniform3f(simplelightColorLocation, lightColors[i].r, lightColors[i].g, lightColors[i].b);
+        glUniformMatrix4fv(0, 1, 0, glm::value_ptr(lightRenderObjects[i].mvpMatrix));
+        glUniform3f(2, lightColors[i].r, lightColors[i].g, lightColors[i].b);
         glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
     }
 
@@ -232,8 +242,8 @@ void FogApplication::render()
 
     for (size_t i = 0; i < lightRenderObjects.size(); ++i)
     {
-        glUniformMatrix4fv(mvpMatrixLocation, 1, 0, glm::value_ptr(lightRenderObjects[i].mvpMatrix));
-        glUniform3f(simplelightColorLocation, lightColors[i].r, lightColors[i].g, lightColors[i].b);
+        glUniformMatrix4fv(0, 1, 0, glm::value_ptr(lightRenderObjects[i].mvpMatrix));
+        glUniform3f(2, lightColors[i].r, lightColors[i].g, lightColors[i].b);
         glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
     }
 }
@@ -310,8 +320,8 @@ void FogApplication::createDensityBuffers()
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, densityBuffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, densityBufferSize, nullptr, GL_DYNAMIC_DRAW);
 
-    glGenBuffers(1, &cumulativeDensityBuffer);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, cumulativeDensityBuffer);
+    glGenBuffers(1, &cumulatveDensityBuffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, cumulatveDensityBuffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, densityBufferSize, nullptr, GL_DYNAMIC_DRAW);
 }
 
