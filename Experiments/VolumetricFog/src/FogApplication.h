@@ -37,6 +37,7 @@ private:
     fw::Shader simpleShader;
     fw::Shader densityShader;
     fw::Shader cumulativeDensityShader;
+    fw::Shader fogShader;
     fw::Image image;
 
     GLuint VAO = 0;
@@ -61,8 +62,12 @@ private:
     std::vector<GLuint> shadowMapBuffers;
     std::vector<GLuint> shadowMapTextures;
 
+    GLuint depthBuffer;
+    GLuint depthTexture;
+
     void createVertexBuffers(const fw::Model& model);
     void createShadowMaps();
     void createDensityBuffers();
+    void createDepthBuffers();
     void createScene();
 };

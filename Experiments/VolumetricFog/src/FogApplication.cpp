@@ -97,19 +97,9 @@ bool FogApplication::initialize()
     glShaderStorageBlockBinding(cumulativeDensityShader.getProgram(), cumulatveDensityInBufferBlockIndex, 0);
     glShaderStorageBlockBinding(cumulativeDensityShader.getProgram(), cumulatveDensityOutBufferBlockIndex, 1);
 
-    path = std::string(ROOT_PATH) + "Experiments/VolumetricFog/shaders/shadowMap";
-    if (!shadowMapShader.createProgram({path + ".vert", path + ".frag"}))
-    {
-        return false;
-    }
-    std::cout << "Loaded shader " << path << " (" << shadowMapShader.getProgram() << ")\n";
-
-    path = std::string(ROOT_PATH) + "Experiments/VolumetricFog/shaders/simple";
-    if (!simpleShader.createProgram({path + ".vert", path + ".frag"}))
-    {
-        return false;
-    }
-    std::cout << "Loaded shader " << path << " (" << simpleShader.getProgram() << ")\n";
+    path = std::string(ROOT_PATH) + "Experiments/VolumetricFog/shaders/fog";
+    status = fogShader.createProgram({path + ".vert", path + ".frag"});
+    assert(status);
 
     fw::Model model;
     std::string modelFile = std::string(ASSETS_PATH) + "Models/cube.obj";
@@ -124,6 +114,7 @@ bool FogApplication::initialize()
     createVertexBuffers(model);
     createShadowMaps();
     createDensityBuffers();
+    createDepthBuffers();
     createScene();
 
     glClearColor(0.0f, 0.0f, 0.3f, 1.0f);
@@ -171,6 +162,19 @@ void FogApplication::render()
         }
     }
 
+    // Render depth map
+    glViewport(0, 0, 1024, 768);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthBuffer);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glm::mat4 vp = camera.getProjectionMatrix() * camera.getViewMatrix();
+
+    for (size_t j = 0; j < renderObjects.size(); ++j)
+    {
+        glUniformMatrix4fv(1, 1, 0, glm::value_ptr(renderObjects[j].transform.getModelMatrix()));
+        glUniformMatrix4fv(2, 1, 0, glm::value_ptr(vp));
+        glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+    }
+
     // Calculate density
     glUseProgram(densityShader.getProgram());
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, densityBufferBlockIndex, densityBuffer);
@@ -203,7 +207,6 @@ void FogApplication::render()
     glUseProgram(diffuseShader.getProgram());
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, 1024, 768);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glActiveTexture(GL_TEXTURE0);
@@ -246,6 +249,24 @@ void FogApplication::render()
         glUniform3f(2, lightColors[i].r, lightColors[i].g, lightColors[i].b);
         glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
     }
+
+    // Render fullscreen triangle
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE);
+
+    glUseProgram(fogShader.getProgram());
+
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, cumulatveDensityBuffer);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+
+    glm::mat4 inverseProj = glm::inverse(camera.getProjectionMatrix());
+    glUniformMatrix4fv(1, 1, 0, glm::value_ptr(inverseProj));
+
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    glDisable(GL_BLEND);
 }
 
 void FogApplication::gui()
@@ -323,6 +344,24 @@ void FogApplication::createDensityBuffers()
     glGenBuffers(1, &cumulatveDensityBuffer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, cumulatveDensityBuffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, densityBufferSize, nullptr, GL_DYNAMIC_DRAW);
+}
+
+void FogApplication::createDepthBuffers()
+{
+    glGenFramebuffers(1, &depthBuffer);
+    glGenTextures(1, &depthTexture);
+
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 768, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = {0.0f, 0.0f, 0.0f, 0.0f};
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, depthBuffer);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
 }
 
 void FogApplication::createScene()

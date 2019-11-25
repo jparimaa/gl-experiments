@@ -2,9 +2,9 @@
 layout (location = 0) in vec3 position;
 
 layout (location = 1) uniform mat4 modelMatrix;
-layout (location = 2) uniform mat4 lightSpaceVP;
+layout (location = 2) uniform mat4 viewProjection;
 
 void main()
 {
-    gl_Position = lightSpaceVP * modelMatrix * vec4(position, 1.0);
+    gl_Position = viewProjection * modelMatrix * vec4(position, 1.0);
 }

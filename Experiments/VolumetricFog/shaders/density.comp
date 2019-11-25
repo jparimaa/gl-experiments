@@ -15,7 +15,7 @@ layout (location = 4) uniform float nearPlane;
 layout (location = 5) uniform float farPlane;
 layout (location = 6) uniform float hfov;
 layout (location = 7) uniform float vfov;
-layout (location = 8) uniform sampler2D shadowMaps[numLights];
+layout (binding = 8) uniform sampler2D shadowMaps[numLights];
 
 vec3 getViewSpacePosition(float nearPlane, float farPlane, float hfov, float vfov)
 {
