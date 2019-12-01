@@ -43,12 +43,13 @@ private:
     GLuint VAO = 0;
     GLuint vertexBuffer = 0;
     GLuint indexBuffer = 0;
+    unsigned int numIndices = 0;
+
     GLuint densityBuffer = 0;
     GLuint densityBufferBlockIndex = 0;
-    GLuint cumulatveDensityBuffer = 0;
+
+    GLuint cumulatveDensityTexture = 0;
     GLuint cumulatveDensityInBufferBlockIndex = 0;
-    GLuint cumulatveDensityOutBufferBlockIndex = 0;
-    unsigned int numIndices = 0;
 
     std::vector<RenderObject> renderObjects;
     std::vector<RenderObject> lightRenderObjects;

@@ -1,11 +1,8 @@
 #version 450 core
 
-layout (std430, binding = 0) readonly buffer cumulativeScatteringData
-{
-    vec4 cumulativeScattering[];
-};
-
 layout (binding = 0) uniform sampler2D depth;
+layout (binding = 1) uniform sampler3D cumulativeScatteringData;
+
 layout (location = 1) uniform mat4 inverseProjection;
 
 in vec2 texCoord;

@@ -93,9 +93,7 @@ bool FogApplication::initialize()
     status = cumulativeDensityShader.createProgram({path + ".comp"});
     assert(status);
     cumulatveDensityInBufferBlockIndex = glGetProgramResourceIndex(cumulativeDensityShader.getProgram(), GL_SHADER_STORAGE_BLOCK, "scatteringData");
-    cumulatveDensityOutBufferBlockIndex = glGetProgramResourceIndex(cumulativeDensityShader.getProgram(), GL_SHADER_STORAGE_BLOCK, "cumulativeScatteringData");
     glShaderStorageBlockBinding(cumulativeDensityShader.getProgram(), cumulatveDensityInBufferBlockIndex, 0);
-    glShaderStorageBlockBinding(cumulativeDensityShader.getProgram(), cumulatveDensityOutBufferBlockIndex, 1);
 
     path = std::string(ROOT_PATH) + "Experiments/VolumetricFog/shaders/fog";
     status = fogShader.createProgram({path + ".vert", path + ".frag"});
@@ -199,7 +197,7 @@ void FogApplication::render()
     // Calculate cumulative density
     glUseProgram(cumulativeDensityShader.getProgram());
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, densityBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, cumulatveDensityBuffer);
+    glBindImageTexture(1, cumulatveDensityTexture, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
     glDispatchCompute(5, 5, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
@@ -256,10 +254,11 @@ void FogApplication::render()
 
     glUseProgram(fogShader.getProgram());
 
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, cumulatveDensityBuffer);
-
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_3D, cumulatveDensityTexture);
 
     glm::mat4 inverseProj = glm::inverse(camera.getProjectionMatrix());
     glUniformMatrix4fv(1, 1, 0, glm::value_ptr(inverseProj));
@@ -341,9 +340,11 @@ void FogApplication::createDensityBuffers()
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, densityBuffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, densityBufferSize, nullptr, GL_DYNAMIC_DRAW);
 
-    glGenBuffers(1, &cumulatveDensityBuffer);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, cumulatveDensityBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, densityBufferSize, nullptr, GL_DYNAMIC_DRAW);
+    glGenTextures(1, &cumulatveDensityTexture);
+    glBindTexture(GL_TEXTURE_3D, cumulatveDensityTexture);
+    glTexStorage3D(GL_TEXTURE_3D, 1, GL_RGBA32F, 160, 90, 128);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
 void FogApplication::createDepthBuffers()
