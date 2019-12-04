@@ -45,11 +45,8 @@ private:
     GLuint indexBuffer = 0;
     unsigned int numIndices = 0;
 
-    GLuint densityBuffer = 0;
-    GLuint densityBufferBlockIndex = 0;
-
+    GLuint densityTexture = 0;
     GLuint cumulatveDensityTexture = 0;
-    GLuint cumulatveDensityInBufferBlockIndex = 0;
 
     std::vector<RenderObject> renderObjects;
     std::vector<RenderObject> lightRenderObjects;
@@ -68,7 +65,7 @@ private:
 
     void createVertexBuffers(const fw::Model& model);
     void createShadowMaps();
-    void createDensityBuffers();
+    void createDensityTextures();
     void createDepthBuffers();
     void createScene();
 };

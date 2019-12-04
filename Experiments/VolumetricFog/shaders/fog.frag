@@ -9,11 +9,6 @@ in vec2 texCoord;
 
 out vec4 color;
 
-vec4 getDensity(vec3 viewPos)
-{
-	return vec4(0.5f);
-}
-
 void main()
 {
 	float depth = texture(depth, texCoord).r;
@@ -25,5 +20,8 @@ void main()
 
     vec4 viewPos = inverseProjection * viewportPos;
     viewPos /= viewPos.w;
-	color = getDensity(viewPos.xyz);
+	
+	float viewDepth = -viewPos.z / 49.5f;
+
+	color = 0.1f * texture(cumulativeScatteringData, vec3(texCoord.x, texCoord.y, viewDepth));
 } 

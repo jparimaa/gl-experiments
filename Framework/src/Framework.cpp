@@ -141,7 +141,7 @@ bool Framework::initialize()
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
-    window = SDL_CreateWindow("OpenGL", 400, 100, 1024, 768, SDL_WINDOW_OPENGL);
+    window = SDL_CreateWindow("OpenGL", 400, 100, 1600, 900, SDL_WINDOW_OPENGL);
     if (!window)
     {
         std::cerr << "ERROR: Failed to create SDL2 window\n";
