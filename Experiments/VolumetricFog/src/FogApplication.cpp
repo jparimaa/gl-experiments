@@ -18,30 +18,8 @@ namespace
 const GLsizei numLights = 2;
 const int shadowMapWidth = 1024;
 const int shadowMapHeight = 1024;
-const int densityBufferSize = 160 * 90 * 128 * sizeof(float) * 4;
-
-void writeDensityImages(GLuint buffer)
-{
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
-
-    GLfloat* ptr;
-    ptr = (GLfloat*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
-
-    int numFloats = densityBufferSize / sizeof(float);
-    std::vector<uint8_t> vec(numFloats, -1);
-    for (int i = 0; i < numFloats; ++i)
-    {
-        vec[i] = static_cast<uint8_t>(ptr[i]);
-    }
-
-    for (int i = 0; i < 128; ++i)
-    {
-        std::string fileName = std::to_string(i) + ".png";
-        stbi_write_png(fileName.c_str(), 160, 90, 4, &vec[i * 160 * 90 * 4], 0);
-    }
-
-    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-}
+const int densityDepth = 128;
+const int densityBufferSize = 160 * 90 * densityDepth * sizeof(float) * 4;
 } // namespace
 
 FogApplication::FogApplication() :
@@ -60,7 +38,7 @@ bool FogApplication::initialize()
 {
     fw::printSystemInfo();
 
-    glm::vec3 p = glm::vec3(0.0f, 2.0f, 20.f);
+    glm::vec3 p = glm::vec3(0.0f, 2.0f, 20.0f);
     camera.getTransformation().position = p;
     cameraController.setCamera(&camera);
     cameraController.setResetMode(p, glm::vec3(0.0f, 0.0f, 0.0f), SDLK_r);
@@ -176,7 +154,7 @@ void FogApplication::render()
     glUniformMatrix4fv(2, 2, 0, glm::value_ptr(*lightSpaceMatrices.data()));
     glUniform1f(4, camera.getNearClipDistance());
     glUniform1f(5, camera.getFarClipDistance());
-    glUniform1f(6, 72.0f);
+    glUniform1f(6, 72.6f);
     glUniform1f(7, camera.getFOV());
 
     for (size_t i = 0; i < shadowMapTextures.size(); ++i)
@@ -187,7 +165,7 @@ void FogApplication::render()
         glUniform1i(8 + gli, gli);
     }
 
-    glDispatchCompute(5, 5, 128);
+    glDispatchCompute(5, 5, densityDepth);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
     // Calculate cumulative density
@@ -335,13 +313,13 @@ void FogApplication::createDensityTextures()
 {
     glGenTextures(1, &densityTexture);
     glBindTexture(GL_TEXTURE_3D, densityTexture);
-    glTexStorage3D(GL_TEXTURE_3D, 1, GL_RGBA32F, 160, 90, 128);
+    glTexStorage3D(GL_TEXTURE_3D, 1, GL_RGBA32F, 160, 90, densityDepth);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glGenTextures(1, &cumulatveDensityTexture);
     glBindTexture(GL_TEXTURE_3D, cumulatveDensityTexture);
-    glTexStorage3D(GL_TEXTURE_3D, 1, GL_RGBA32F, 160, 90, 128);
+    glTexStorage3D(GL_TEXTURE_3D, 1, GL_RGBA32F, 160, 90, densityDepth);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
@@ -452,7 +430,7 @@ void FogApplication::createScene()
 
     for (int i = 0; i < numLights; ++i)
     {
-        glm::mat4 lightProjection = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, 0.1f, 20.0f);
+        glm::mat4 lightProjection = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, 0.1f, 20.0f);
         glm::mat4 lightView = glm::lookAt(lightPositions[i], lightPositions[i] + lightDirections[i], glm::vec3(0.0, 1.0, 0.0));
         lightSpaceMatrices[i] = lightProjection * lightView;
 
