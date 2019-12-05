@@ -71,6 +71,14 @@ void CameraController::update()
     {
         t.move(-t.getLeft() * speed);
     }
+    if (Input::isKeyDown(SDLK_q))
+    {
+        t.move(-t.getUp() * speed);
+    }
+    if (Input::isKeyDown(SDLK_e))
+    {
+        t.move(t.getUp() * speed);
+    }
 
     if (!Input::isKeyDown(SDLK_LSHIFT))
     {

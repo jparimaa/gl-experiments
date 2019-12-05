@@ -1,5 +1,7 @@
 #version 450 core
 
+#define toRadians 0.0174533
+
 layout (binding = 0) uniform sampler2D depth;
 layout (binding = 1) uniform sampler3D cumulativeScatteringData;
 
@@ -22,7 +24,13 @@ void main()
     vec4 viewPos = inverseProjection * viewportPos;
     viewPos /= viewPos.w;
 	
-	float depthCoordinate = -viewPos.z / 49.5f;
+	float depthCoordinate = -viewPos.z / 50.0f;
+    
+    float halfWidthAtZ = tan((72.6f / 2.0f) * toRadians) * -viewPos.z;
+    float halfHeightAtZ = tan((45.0f / 2.0f) * toRadians) * -viewPos.z;
 
-	color = 0.3f * texture(cumulativeScatteringData, vec3(texCoord.x, texCoord.y, depthCoordinate));
+    float x = (viewPos.x + halfWidthAtZ) / (2.0f * halfWidthAtZ);
+    float y = (viewPos.y + halfHeightAtZ) / (2.0f * halfHeightAtZ);
+
+	color = 0.3f * texture(cumulativeScatteringData, vec3(x, y, depthCoordinate));
 } 

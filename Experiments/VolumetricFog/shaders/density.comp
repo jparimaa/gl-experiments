@@ -14,29 +14,29 @@ layout (location = 6) uniform float hfov;
 layout (location = 7) uniform float vfov;
 layout (binding = 8) uniform sampler2D shadowMaps[numLights];
 
-vec3 getViewSpacePosition(float nearPlane, float farPlane, float hfov, float vfov)
+vec3 getViewSpacePosition(ivec3 cell, float nearPlane, float farPlane, float hfov, float vfov)
 {
-	uint xg = gl_WorkGroupID.x * gl_WorkGroupSize.x + gl_LocalInvocationID.x;
-	uint yg = gl_WorkGroupID.y * gl_WorkGroupSize.y + gl_LocalInvocationID.y;
-	uint zg = gl_WorkGroupID.z;
-
 	float zThickness = (farPlane - nearPlane) / float(gl_NumWorkGroups.z);
-	float z = nearPlane + (zg * zThickness);
+	float z = nearPlane + (cell.z * zThickness);
 
 	float heightAtZ = tan(vfov / 2.0f * toRadians) * z * 2.0f;
 	float yThickness = heightAtZ / float(gl_WorkGroupSize.y * gl_NumWorkGroups.y);
-	float y = (heightAtZ / 2.0f) - (yThickness * yg);
+	float y = (heightAtZ / 2.0f) - (yThickness * cell.y);
 
 	float widthAtZ = tan(hfov / 2.0f * toRadians) * z * 2.0f;
 	float xThickness = widthAtZ / float(gl_WorkGroupSize.x * gl_NumWorkGroups.x);
-	float x = (-widthAtZ / 2.0f) + (xThickness * xg);
+	float x = (-widthAtZ / 2.0f) + (xThickness * cell.x);
 
 	return vec3(x, y, -z);
 }
 
 void main()
-{	
-	vec3 viewSpacePos = getViewSpacePosition(nearPlane, farPlane, hfov, vfov);
+{
+	ivec3 cell = ivec3(gl_WorkGroupID.x * gl_WorkGroupSize.x + gl_LocalInvocationID.x,
+			  		   gl_WorkGroupID.y * gl_WorkGroupSize.y + gl_LocalInvocationID.y,
+			  		   gl_WorkGroupID.z);
+
+	vec3 viewSpacePos = getViewSpacePosition(cell, nearPlane, farPlane, hfov, vfov);
 	vec3 worldPos = vec3(inverseViewMatrix * vec4(viewSpacePos, 1.0f));
 	float scatter = 0.0f;
 
@@ -48,15 +48,10 @@ void main()
 		float currentDepth = lightProjectedPos.z;
 		float closestDepth = texture(shadowMaps[i], lightProjectedPos.xy).r; 
 		float bias = 0.005;
-		scatter += currentDepth > closestDepth ? 0.0f : 0.4f;
+		scatter += currentDepth > closestDepth ? 0.0f : 0.2f;
 	}
 
-	ivec3 texturePos = 
-		ivec3(gl_WorkGroupID.x * gl_WorkGroupSize.x + gl_LocalInvocationID.x,
-			  89 - (gl_WorkGroupID.y * gl_WorkGroupSize.y + gl_LocalInvocationID.y),
-			  gl_WorkGroupID.z);
+	vec4 scatterWrite = vec4(scatter);
 
-	vec4 scatterWrite = vec4(scatter, 0.0f, 0.0f, 255.0f);
-
-	imageStore(scatteringData, texturePos, scatterWrite);
+	imageStore(scatteringData, ivec3(cell.x, 89 - cell.y, cell.z), scatterWrite);
 }
