@@ -32,6 +32,13 @@ FogApplication::~FogApplication()
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &vertexBuffer);
     glDeleteBuffers(1, &indexBuffer);
+    glDeleteTextures(1, &densityTexture);
+    glDeleteTextures(1, &cumulatveDensityTexture);
+    glDeleteTextures(1, &depthTexture);
+    glDeleteTextures(1, &framebufferTexture);
+    glDeleteRenderbuffers(1, &renderbuffer);
+    glDeleteFramebuffers(1, &depthBuffer);
+    glDeleteFramebuffers(1, &framebuffer);
 }
 
 bool FogApplication::initialize()
@@ -87,6 +94,7 @@ bool FogApplication::initialize()
     createShadowMaps();
     createDensityTextures();
     createDepthBuffers();
+    createFramebuffer();
     createScene();
 
     glClearColor(0.0f, 0.0f, 0.3f, 1.0f);
@@ -178,7 +186,7 @@ void FogApplication::render()
     // Render diffuse lighting with shadows
     glUseProgram(diffuseShader.getProgram());
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glActiveTexture(GL_TEXTURE0);
@@ -239,6 +247,11 @@ void FogApplication::render()
     glUniformMatrix4fv(1, 1, 0, glm::value_ptr(inverseProj));
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    // Blit
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(0, 0, 1600, 900, 0, 0, 1600, 900, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
     glDisable(GL_BLEND);
 }
@@ -344,6 +357,26 @@ void FogApplication::createDepthBuffers()
 
     glBindFramebuffer(GL_FRAMEBUFFER, depthBuffer);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+}
+
+void FogApplication::createFramebuffer()
+{
+    glGenFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+    glGenTextures(1, &framebufferTexture);
+    glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 1600, 900, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferTexture, 0);
+
+    glGenRenderbuffers(1, &renderbuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1600, 900);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbuffer);
+
+    assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 }
 
 void FogApplication::createScene()

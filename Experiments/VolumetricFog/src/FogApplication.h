@@ -63,9 +63,14 @@ private:
     GLuint depthBuffer;
     GLuint depthTexture;
 
+    GLuint framebuffer;
+    GLuint renderbuffer;
+    GLuint framebufferTexture;
+
     void createVertexBuffers(const fw::Model& model);
     void createShadowMaps();
     void createDensityTextures();
     void createDepthBuffers();
+    void createFramebuffer();
     void createScene();
 };
