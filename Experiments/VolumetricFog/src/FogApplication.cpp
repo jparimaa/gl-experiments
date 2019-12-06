@@ -23,13 +23,12 @@ const int densityBufferSize = 160 * 90 * densityDepth * sizeof(float) * 4;
 const int width = 1600;
 const int height = 900;
 
-// WHY?!
-float hfov = 90.0f;
-float vfov = 59.0f;
+float hfov = 72.6f;
+float vfov = 45.0f;
 } // namespace
 
 FogApplication::FogApplication() :
-    camera(45.0f, 16.0f / 9.0f, 0.5f, 50.0f)
+    camera(glm::radians(vfov), 16.0f / 9.0f, 0.5f, 50.0f)
 {
 }
 
