@@ -10,6 +10,16 @@ Camera::Camera()
     updateProjectionMatrix();
 }
 
+Camera::Camera(float fov, float aspectRatio, float ncd, float fcd) :
+    FOV(fov),
+    ratio(aspectRatio),
+    nearClipDistance(ncd),
+    farClipDistance(fcd)
+{
+    updateViewMatrix();
+    updateProjectionMatrix();
+}
+
 Camera::~Camera()
 {
 }
@@ -47,5 +57,20 @@ void Camera::setAspectRatio(float aspectRatio)
 {
     ratio = aspectRatio;
     updateProjectionMatrix();
+}
+
+float Camera::getNearClipDistance() const
+{
+    return nearClipDistance;
+}
+
+float Camera::getFarClipDistance() const
+{
+    return farClipDistance;
+}
+
+float Camera::getFOV() const
+{
+    return FOV;
 }
 } // namespace fw

@@ -9,6 +9,7 @@ class Camera
 {
 public:
     explicit Camera();
+    explicit Camera(float fov, float aspectRatio, float ncd, float fcd);
     ~Camera();
 
     const glm::mat4x4& updateViewMatrix();
@@ -21,10 +22,14 @@ public:
 
     void setAspectRatio(float aspectRatio);
 
+    float getNearClipDistance() const;
+    float getFarClipDistance() const;
+    float getFOV() const;
+
 private:
     float FOV = 45.0f;
     float ratio = 1.33333f;
-    float nearClipDistance = 0.1f;
+    float nearClipDistance = 1.0f;
     float farClipDistance = 100.0f;
 
     glm::mat4 viewMatrix;

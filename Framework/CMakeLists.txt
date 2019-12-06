@@ -3,7 +3,7 @@ project(Framework VERSION 1.0.0 LANGUAGES CXX)
 
 file(GLOB SOURCES 
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/fw/*.h)
 
 file(GLOB IMGUI
     ${CMAKE_CURRENT_SOURCE_DIR}/imgui/*.cpp 

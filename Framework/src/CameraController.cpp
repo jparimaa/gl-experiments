@@ -71,16 +71,27 @@ void CameraController::update()
     {
         t.move(-t.getLeft() * speed);
     }
-
-    t.rotate(Transformation::UP, -static_cast<float>(Input::getMouseDeltaX()) * sensitivity);
-    t.rotate(Transformation::LEFT, static_cast<float>(Input::getMouseDeltaY()) * sensitivity);
-    if (t.rotation.x > ROTATION_LIMIT)
+    if (Input::isKeyDown(SDLK_q))
     {
-        t.rotation.x = ROTATION_LIMIT;
+        t.move(-t.getUp() * speed);
     }
-    if (t.rotation.x < -ROTATION_LIMIT)
+    if (Input::isKeyDown(SDLK_e))
     {
-        t.rotation.x = -ROTATION_LIMIT;
+        t.move(t.getUp() * speed);
+    }
+
+    if (!Input::isKeyDown(SDLK_LSHIFT))
+    {
+        t.rotate(Transformation::UP, -static_cast<float>(Input::getMouseDeltaX()) * sensitivity);
+        t.rotate(Transformation::LEFT, static_cast<float>(Input::getMouseDeltaY()) * sensitivity);
+        if (t.rotation.x > ROTATION_LIMIT)
+        {
+            t.rotation.x = ROTATION_LIMIT;
+        }
+        if (t.rotation.x < -ROTATION_LIMIT)
+        {
+            t.rotation.x = -ROTATION_LIMIT;
+        }
     }
 
     if (Input::isKeyReleased(resetKey))

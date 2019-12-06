@@ -1,0 +1,57 @@
+#version 450 core
+
+layout (local_size_x = 32, local_size_y = 18, local_size_z = 1) in;
+
+layout (binding = 0) writeonly uniform image3D scatteringData;
+
+#define toRadians 0.0174533
+#define numLights 2
+layout (location = 1) uniform mat4 inverseViewMatrix;
+layout (location = 2) uniform mat4 lightSpaceVP[numLights];
+layout (location = 4) uniform float nearPlane;
+layout (location = 5) uniform float farPlane;
+layout (location = 6) uniform float hfov;
+layout (location = 7) uniform float vfov;
+layout (binding = 8) uniform sampler2D shadowMaps[numLights];
+
+vec3 getViewSpacePosition(ivec3 cell, float nearPlane, float farPlane, float hfov, float vfov)
+{
+	float zThickness = (farPlane - nearPlane) / float(gl_NumWorkGroups.z);
+	float z = nearPlane + (cell.z * zThickness);
+
+	float heightAtZ = tan(vfov / 2.0f * toRadians) * z * 2.0f;
+	float yThickness = heightAtZ / float(gl_WorkGroupSize.y * gl_NumWorkGroups.y);
+	float y = (heightAtZ / 2.0f) - (yThickness * cell.y);
+
+	float widthAtZ = tan(hfov / 2.0f * toRadians) * z * 2.0f;
+	float xThickness = widthAtZ / float(gl_WorkGroupSize.x * gl_NumWorkGroups.x);
+	float x = (-widthAtZ / 2.0f) + (xThickness * cell.x);
+
+	return vec3(x, y, -z);
+}
+
+void main()
+{
+	ivec3 cell = ivec3(gl_WorkGroupID.x * gl_WorkGroupSize.x + gl_LocalInvocationID.x,
+			  		   gl_WorkGroupID.y * gl_WorkGroupSize.y + gl_LocalInvocationID.y,
+			  		   gl_WorkGroupID.z);
+
+	vec3 viewSpacePos = getViewSpacePosition(cell, nearPlane, farPlane, hfov, vfov);
+	vec3 worldPos = vec3(inverseViewMatrix * vec4(viewSpacePos, 1.0f));
+	float scatter = 0.0f;
+
+	for (int i = 0; i < numLights; ++i)
+	{
+		vec4 lightProjectionSpacePos = lightSpaceVP[i] * vec4(worldPos, 1.0f);
+		vec3 lightProjectedPos = lightProjectionSpacePos.xyz / lightProjectionSpacePos.w;
+		lightProjectedPos = lightProjectedPos * 0.5 + 0.5;
+		float currentDepth = lightProjectedPos.z;
+		float closestDepth = texture(shadowMaps[i], lightProjectedPos.xy).r; 
+		float bias = 0.005;
+		scatter += currentDepth > closestDepth ? 0.0f : 0.2f;
+	}
+
+	vec4 scatterWrite = vec4(scatter);
+
+	imageStore(scatteringData, ivec3(cell.x, 89 - cell.y, cell.z), scatterWrite);
+}
