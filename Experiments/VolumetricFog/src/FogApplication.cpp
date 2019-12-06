@@ -20,6 +20,12 @@ const int shadowMapWidth = 1024;
 const int shadowMapHeight = 1024;
 const int densityDepth = 128;
 const int densityBufferSize = 160 * 90 * densityDepth * sizeof(float) * 4;
+const int width = 1600;
+const int height = 900;
+
+// WHY?!
+float hfov = 90.0f;
+float vfov = 59.0f;
 } // namespace
 
 FogApplication::FogApplication() :
@@ -143,7 +149,7 @@ void FogApplication::render()
     }
 
     // Render depth map
-    glViewport(0, 0, 1600, 900);
+    glViewport(0, 0, width, height);
     glBindFramebuffer(GL_FRAMEBUFFER, depthBuffer);
     glClear(GL_DEPTH_BUFFER_BIT);
     glm::mat4 vp = camera.getProjectionMatrix() * camera.getViewMatrix();
@@ -162,8 +168,8 @@ void FogApplication::render()
     glUniformMatrix4fv(2, 2, 0, glm::value_ptr(*lightSpaceMatrices.data()));
     glUniform1f(4, camera.getNearClipDistance());
     glUniform1f(5, camera.getFarClipDistance());
-    glUniform1f(6, 72.6f);
-    glUniform1f(7, camera.getFOV());
+    glUniform1f(6, hfov);
+    glUniform1f(7, vfov);
 
     for (size_t i = 0; i < shadowMapTextures.size(); ++i)
     {
@@ -233,7 +239,6 @@ void FogApplication::render()
     // Render fullscreen triangle
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
-    //glBlendFunc(GL_ONE, GL_ZERO);
 
     glUseProgram(fogShader.getProgram());
 
@@ -245,13 +250,15 @@ void FogApplication::render()
 
     glm::mat4 inverseProj = glm::inverse(camera.getProjectionMatrix());
     glUniformMatrix4fv(1, 1, 0, glm::value_ptr(inverseProj));
+    glUniform1f(2, hfov);
+    glUniform1f(3, vfov);
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
     // Blit
     glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBlitFramebuffer(0, 0, 1600, 900, 0, 0, 1600, 900, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+    glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
     glDisable(GL_BLEND);
 }
@@ -347,7 +354,7 @@ void FogApplication::createDepthBuffers()
     glGenTextures(1, &depthTexture);
 
     glBindTexture(GL_TEXTURE_2D, depthTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1600, 900, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -366,14 +373,14 @@ void FogApplication::createFramebuffer()
 
     glGenTextures(1, &framebufferTexture);
     glBindTexture(GL_TEXTURE_2D, framebufferTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 1600, 900, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferTexture, 0);
 
     glGenRenderbuffers(1, &renderbuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1600, 900);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbuffer);
 
     assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);

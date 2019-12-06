@@ -6,6 +6,8 @@ layout (binding = 0) uniform sampler2D depth;
 layout (binding = 1) uniform sampler3D cumulativeScatteringData;
 
 layout (location = 1) uniform mat4 inverseProjection;
+layout (location = 2) uniform float hfov;
+layout (location = 3) uniform float vfov;
 
 in vec2 texCoord;
 
@@ -26,8 +28,8 @@ void main()
 	
 	float depthCoordinate = -viewPos.z / 50.0f;
     
-    float halfWidthAtZ = tan((72.6f / 2.0f) * toRadians) * -viewPos.z;
-    float halfHeightAtZ = tan((45.0f / 2.0f) * toRadians) * -viewPos.z;
+    float halfWidthAtZ = tan((hfov / 2.0f) * toRadians) * -viewPos.z;
+    float halfHeightAtZ = tan((vfov / 2.0f) * toRadians) * -viewPos.z;
 
     float x = (viewPos.x + halfWidthAtZ) / (2.0f * halfWidthAtZ);
     float y = (viewPos.y + halfHeightAtZ) / (2.0f * halfHeightAtZ);
