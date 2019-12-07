@@ -5,7 +5,10 @@ layout (local_size_x = 32, local_size_y = 18, local_size_z = 1) in;
 layout (binding = 0) writeonly uniform image3D scatteringData;
 
 #define toRadians 0.0174533
+#define PI 3.14159265358979323846
+
 #define numLights 2
+
 layout (location = 1) uniform mat4 inverseViewMatrix;
 layout (location = 2) uniform mat4 lightSpaceVP[numLights];
 layout (location = 4) uniform float nearPlane;
@@ -13,6 +16,9 @@ layout (location = 5) uniform float farPlane;
 layout (location = 6) uniform float hfov;
 layout (location = 7) uniform float vfov;
 layout (binding = 8) uniform sampler2D shadowMaps[numLights];
+layout (location = 10) uniform float fogScattering;
+layout (location = 11) uniform float time;
+layout (location = 14) uniform vec4 lightColors[numLights];
 
 vec3 getViewSpacePosition(ivec3 cell, float nearPlane, float farPlane, float hfov, float vfov)
 {
@@ -30,6 +36,29 @@ vec3 getViewSpacePosition(ivec3 cell, float nearPlane, float farPlane, float hfo
 	return vec3(x, y, -z);
 }
 
+float random (vec2 st) 
+{
+    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+}
+
+// 2D Noise based on Morgan McGuire @morgan3d https://www.shadertoy.com/view/4dS3Wd
+float noise (vec2 st) 
+{
+    vec2 i = floor(st);
+    vec2 f = fract(st);
+
+    float a = random(i);
+    float b = random(i + vec2(1.0, 0.0));
+    float c = random(i + vec2(0.0, 1.0));
+    float d = random(i + vec2(1.0, 1.0));
+
+    vec2 u = f*f*(3.0-2.0*f);
+
+    return mix(a, b, u.x) +
+            (c - a)* u.y * (1.0 - u.x) +
+            (d - b) * u.x * u.y;
+}
+
 void main()
 {
 	ivec3 cell = ivec3(gl_WorkGroupID.x * gl_WorkGroupSize.x + gl_LocalInvocationID.x,
@@ -38,7 +67,7 @@ void main()
 
 	vec3 viewSpacePos = getViewSpacePosition(cell, nearPlane, farPlane, hfov, vfov);
 	vec3 worldPos = vec3(inverseViewMatrix * vec4(viewSpacePos, 1.0f));
-	float scatter = 0.0f;
+	vec3 lighting = vec3(0.0f);
 
 	for (int i = 0; i < numLights; ++i)
 	{
@@ -48,10 +77,15 @@ void main()
 		float currentDepth = lightProjectedPos.z;
 		float closestDepth = texture(shadowMaps[i], lightProjectedPos.xy).r; 
 		float bias = 0.005;
-		scatter += currentDepth > closestDepth ? 0.0f : 0.2f;
+		lighting += currentDepth > closestDepth ? vec3(0.0f) : lightColors[i].rgb;
 	}
 
-	vec4 scatterWrite = vec4(scatter);
+	float thickness = (farPlane - nearPlane) / float(gl_NumWorkGroups.z);
+	vec2 noiseOffset = vec2(0.15f * sin(time + viewSpacePos.z), 0.25f * cos(time - viewSpacePos.z));
+	float dustDensity = 0.7f + 1.5f * noise(viewSpacePos.xy + noiseOffset);
+	float scattering = fogScattering * dustDensity * thickness;
 
-	imageStore(scatteringData, ivec3(cell.x, 89 - cell.y, cell.z), scatterWrite);
+	vec4 fogValue = vec4(lighting * scattering, scattering /*+ absorption*/);
+
+	imageStore(scatteringData, ivec3(cell.x, 89 - cell.y, cell.z), fogValue);
 }

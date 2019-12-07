@@ -19,11 +19,7 @@ void main()
 	for (int i = 0; i < numLights; ++i)	
 	{
 		vec3 projCoords = lightSpacePos[i].xyz / lightSpacePos[i].w;
-		if (projCoords.z > 1.0) 
-		{
-			//shadow += perLightIncrease;
-		} 
-		else 
+		if (projCoords.z <= 1.0) 
 		{
 			projCoords = projCoords * 0.5 + 0.5;
 			float currentDepth = projCoords.z;

@@ -27,12 +27,6 @@ void main()
     viewPos /= viewPos.w;
 	
 	float depthCoordinate = -viewPos.z / 50.0f;
-    
-    float halfWidthAtZ = tan((hfov / 2.0f) * toRadians) * -viewPos.z;
-    float halfHeightAtZ = tan((vfov / 2.0f) * toRadians) * -viewPos.z;
 
-    float x = (viewPos.x + halfWidthAtZ) / (2.0f * halfWidthAtZ);
-    float y = (viewPos.y + halfHeightAtZ) / (2.0f * halfHeightAtZ);
-
-	color = 0.3f * texture(cumulativeScatteringData, vec3(x, y, depthCoordinate));
+	color = texture(cumulativeScatteringData, vec3(texCoord.x, texCoord.y, depthCoordinate));
 } 

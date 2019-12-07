@@ -169,6 +169,8 @@ void FogApplication::render()
     glUniform1f(5, camera.getFarClipDistance());
     glUniform1f(6, hfov);
     glUniform1f(7, vfov);
+    glUniform1f(10, 0.1f);
+    glUniform1f(11, fw::Framework::getTimeSinceStart());
 
     for (size_t i = 0; i < shadowMapTextures.size(); ++i)
     {
@@ -177,6 +179,8 @@ void FogApplication::render()
         glBindTexture(GL_TEXTURE_2D, shadowMapTextures[i]);
         glUniform1i(8 + gli, gli);
     }
+
+    glUniform4fv(14, numLights, reinterpret_cast<GLfloat*>(lightColors.data()));
 
     glDispatchCompute(5, 5, densityDepth);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -387,7 +391,7 @@ void FogApplication::createFramebuffer()
 
 void FogApplication::createScene()
 {
-    renderObjects.resize(12);
+    renderObjects.resize(13);
     fw::Transformation t;
 
     float leftWallX = -6.0f;
@@ -450,6 +454,10 @@ void FogApplication::createScene()
     t.position = glm::vec3(0.0, 8.0f, 0.0f);
     t.scale = glm::vec3(6.0f, thickness, depth);
     renderObjects[11].transform = t; // Floor
+
+    t.position = glm::vec3(0.0, 0.0f, -20.0f);
+    t.scale = glm::vec3(10.0f, 10.0f, 0.1f);
+    renderObjects[12].transform = t; // Back wall
 
     for (RenderObject& ro : renderObjects)
     {

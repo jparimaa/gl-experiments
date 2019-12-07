@@ -7,20 +7,33 @@ layout (local_size_x = 32, local_size_y = 18, local_size_z = 1) in;
 layout (binding = 0, rgba32f) readonly uniform image3D scatteringData;
 layout (binding = 1) writeonly uniform image3D cumulativeScatteringData;
 
+vec4 accumulate(vec4 front, vec4 back)
+{
+    vec3 light = front.rgb + clamp(exp(-front.a), 0.0f, 1.0f) * back.rgb;
+    return vec4(light.rgb, front.a + back.a);
+}
+
+void writeToImage(writeonly image3D cumulativeScatteringData, ivec3 pos, vec4 value)
+{
+    vec4 finalValue = vec4(value.rgb, clamp(exp(-value.a), 0.0f, 1.0f));
+    imageStore(cumulativeScatteringData, pos, finalValue);
+}
+
 void main()
 {
-    vec4 sum = vec4(0.0f);
+    ivec3 texturePos = 
+        ivec3(gl_WorkGroupID.x * gl_WorkGroupSize.x + gl_LocalInvocationID.x,
+                89 - (gl_WorkGroupID.y * gl_WorkGroupSize.y + gl_LocalInvocationID.y),
+                0);
 
-    for (uint i = 0; i < DEPTH; ++i)
+    vec4 current = imageLoad(scatteringData, texturePos);
+    writeToImage(cumulativeScatteringData, texturePos, current);
+
+    for (int i = 1; i < DEPTH; ++i)
     {
-        ivec3 texturePos = 
-            ivec3(gl_WorkGroupID.x * gl_WorkGroupSize.x + gl_LocalInvocationID.x,
-                  89 - (gl_WorkGroupID.y * gl_WorkGroupSize.y + gl_LocalInvocationID.y),
-                  i);
-
-        sum += imageLoad(scatteringData, texturePos);
-        sum.a = 255.0f;
-     
-        imageStore(cumulativeScatteringData, texturePos, sum);
+        texturePos.z = i;
+        vec4 next = imageLoad(scatteringData, texturePos);
+        current = accumulate(current, next);
+        writeToImage(cumulativeScatteringData, texturePos, current);
     }
 }
