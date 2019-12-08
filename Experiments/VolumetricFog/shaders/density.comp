@@ -69,6 +69,11 @@ void main()
 	vec3 worldPos = vec3(inverseViewMatrix * vec4(viewSpacePos, 1.0f));
 	vec3 lighting = vec3(0.0f);
 
+	float thickness = (farPlane - nearPlane) / float(gl_NumWorkGroups.z);
+	vec2 noiseOffset = vec2(0.15f * sin(time + worldPos.z), 0.25f * cos(time - worldPos.z));
+	float dustDensity = 0.7f + 0.0f * noise(worldPos.xy + noiseOffset);
+	float scattering = 0.0f;
+
 	for (int i = 0; i < numLights; ++i)
 	{
 		vec4 lightProjectionSpacePos = lightSpaceVP[i] * vec4(worldPos, 1.0f);
@@ -77,15 +82,13 @@ void main()
 		float currentDepth = lightProjectedPos.z;
 		float closestDepth = texture(shadowMaps[i], lightProjectedPos.xy).r; 
 		float bias = 0.005;
-		lighting += currentDepth > closestDepth ? vec3(0.0f) : lightColors[i].rgb;
+		if (currentDepth < closestDepth)
+		{
+			lighting += lightColors[i].rgb;
+			scattering = fogScattering * dustDensity * thickness;
+		}
 	}
 
-	float thickness = (farPlane - nearPlane) / float(gl_NumWorkGroups.z);
-	vec2 noiseOffset = vec2(0.15f * sin(time + viewSpacePos.z), 0.25f * cos(time - viewSpacePos.z));
-	float dustDensity = 0.7f + 1.5f * noise(viewSpacePos.xy + noiseOffset);
-	float scattering = fogScattering * dustDensity * thickness;
-
 	vec4 fogValue = vec4(lighting * scattering, scattering /*+ absorption*/);
-
 	imageStore(scatteringData, ivec3(cell.x, 89 - cell.y, cell.z), fogValue);
 }

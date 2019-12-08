@@ -28,5 +28,6 @@ void main()
 	
 	float depthCoordinate = -viewPos.z / 50.0f;
 
+    // Should be: lighting * fog.a + fog.rgb
 	color = texture(cumulativeScatteringData, vec3(texCoord.x, texCoord.y, depthCoordinate));
 } 
