@@ -6,11 +6,8 @@
 
 #include <imgui/imgui.h>
 #include <glm/gtc/type_ptr.hpp>
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb_image_write.h>
 
 #include <iostream>
-#include <fstream>
 #include <cmath>
 
 namespace
@@ -110,6 +107,16 @@ bool FogApplication::initialize()
 
 void FogApplication::update()
 {
+    if (fw::Input::isKeyReleased(SDLK_f))
+    {
+        fogScattering += 0.05f;
+    }
+    if (fw::Input::isKeyReleased(SDLK_g))
+    {
+        fogScattering -= 0.05f;
+        fogScattering = std::max(0.0f, fogScattering);
+    }
+
     fw::toggleRelativeMouseMode();
 
     cameraController.update();
@@ -169,7 +176,7 @@ void FogApplication::render()
     glUniform1f(5, camera.getFarClipDistance());
     glUniform1f(6, hfov);
     glUniform1f(7, vfov);
-    glUniform1f(10, 0.1f);
+    glUniform1f(10, fogScattering);
     glUniform1f(11, fw::Framework::getTimeSinceStart());
 
     for (size_t i = 0; i < shadowMapTextures.size(); ++i)
@@ -253,8 +260,7 @@ void FogApplication::render()
 
     glm::mat4 inverseProj = glm::inverse(camera.getProjectionMatrix());
     glUniformMatrix4fv(1, 1, 0, glm::value_ptr(inverseProj));
-    glUniform1f(2, hfov);
-    glUniform1f(3, vfov);
+    glUniform1f(2, camera.getFarClipDistance());
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -455,8 +461,8 @@ void FogApplication::createScene()
     t.scale = glm::vec3(6.0f, thickness, depth);
     renderObjects[11].transform = t; // Floor
 
-    t.position = glm::vec3(0.0, 0.0f, -20.0f);
-    t.scale = glm::vec3(10.0f, 10.0f, 0.1f);
+    t.position = glm::vec3(0.0, 0.0f, -20.5f);
+    t.scale = glm::vec3(10.0f, 10.0f, 1.0f);
     renderObjects[12].transform = t; // Back wall
 
     for (RenderObject& ro : renderObjects)

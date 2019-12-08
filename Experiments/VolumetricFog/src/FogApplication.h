@@ -67,6 +67,8 @@ private:
     GLuint renderbuffer;
     GLuint framebufferTexture;
 
+    float fogScattering = 0.1f;
+
     void createVertexBuffers(const fw::Model& model);
     void createShadowMaps();
     void createDensityTextures();

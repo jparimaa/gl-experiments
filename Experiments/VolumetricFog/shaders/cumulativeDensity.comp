@@ -21,10 +21,10 @@ void writeToImage(writeonly image3D cumulativeScatteringData, ivec3 pos, vec4 va
 
 void main()
 {
-    ivec3 texturePos = 
-        ivec3(gl_WorkGroupID.x * gl_WorkGroupSize.x + gl_LocalInvocationID.x,
-                89 - (gl_WorkGroupID.y * gl_WorkGroupSize.y + gl_LocalInvocationID.y),
-                0);
+    ivec3 texturePos = ivec3(
+        gl_WorkGroupID.x * gl_WorkGroupSize.x + gl_LocalInvocationID.x,
+        89 - (gl_WorkGroupID.y * gl_WorkGroupSize.y + gl_LocalInvocationID.y),
+        0);
 
     vec4 current = imageLoad(scatteringData, texturePos);
     writeToImage(cumulativeScatteringData, texturePos, current);

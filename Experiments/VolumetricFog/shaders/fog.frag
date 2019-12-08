@@ -6,8 +6,7 @@ layout (binding = 0) uniform sampler2D depth;
 layout (binding = 1) uniform sampler3D cumulativeScatteringData;
 
 layout (location = 1) uniform mat4 inverseProjection;
-layout (location = 2) uniform float hfov;
-layout (location = 3) uniform float vfov;
+layout (location = 2) uniform float farPlane;
 
 in vec2 texCoord;
 
@@ -26,7 +25,7 @@ void main()
     vec4 viewPos = inverseProjection * viewportPos;
     viewPos /= viewPos.w;
 	
-	float depthCoordinate = -viewPos.z / 50.0f;
+	float depthCoordinate = -viewPos.z / farPlane;
 
     // Should be: lighting * fog.a + fog.rgb
 	color = texture(cumulativeScatteringData, vec3(texCoord.x, texCoord.y, depthCoordinate));
