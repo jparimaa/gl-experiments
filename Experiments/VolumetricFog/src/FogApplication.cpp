@@ -17,8 +17,8 @@ const int shadowMapWidth = 1024;
 const int shadowMapHeight = 1024;
 const int densityDepth = 128;
 const int densityBufferSize = 160 * 90 * densityDepth * sizeof(float) * 4;
-const int width = 1600;
-const int height = 900;
+const int width = 1024;
+const int height = 768;
 
 float hfov = 72.6f;
 float vfov = 45.0f;
