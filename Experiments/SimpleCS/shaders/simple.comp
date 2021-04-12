@@ -1,0 +1,13 @@
+#version 450 core
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout (binding = 0) writeonly uniform image2D tex;
+
+layout (location = 0) uniform float time;
+
+void main()
+{
+    vec4 color = vec4(sin(time) * float(gl_GlobalInvocationID.x) / 256.0f, float(gl_GlobalInvocationID.y) / 256.0, 0.5f, 1.0f);
+    imageStore(tex, ivec2(gl_GlobalInvocationID.xy), color);
+}
